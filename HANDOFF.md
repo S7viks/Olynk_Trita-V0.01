@@ -2,6 +2,124 @@
 
 ---
 
+## SHIP — F-CONN-002, F-CONN-004, F-CONN-006 (+ Tally health row) — 2026-05-21
+
+**Features:** Unicommerce, Shiprocket, Razorpay API connect/sync; `F-CONN-003` Tally shown as `csv_hub` (ingest blocked until `F-CONN-005`).
+
+### What shipped
+
+| Layer | Path / endpoint |
+|-------|-----------------|
+| Migration | `infra/supabase/migrations/20260520600000_connector_raw_rm1.sql` (applied via `scripts/apply_migrations.py`) |
+| API | `POST /v1/sources/{unicommerce\|shiprocket\|razorpay}/connect` and `/sync` |
+| Health | `GET /v1/integrations/health` — 5 sources (shopify, unicommerce, tally, shiprocket, razorpay) |
+| dbt | `stg_*`, `gold.fact_shipment`, `gold.fact_payout`, `fact_inventory_daily` union |
+| Web | `/sources` RM-1 panel + `POST /api/sources/[source]/sync` |
+| Dev | `CONNECTOR_DEV_FIXTURES=1` + `scripts/connect_rm1_fixtures.ps1` |
+
+### Verify (Yoga Bar tenant)
+
+```powershell
+# API running; .env has DATABASE_URL, CONNECTOR_DEV_FIXTURES=1, YOGA_BAR_TENANT_ID
+.\scripts\connect_rm1_fixtures.ps1
+python scripts/run_dbt.py run
+python -m pytest trita/apps/api/tests/test_connectors_rm1.py trita/apps/api/tests/test_integration_health.py -q
+```
+
+### Deferred
+
+- `F-CONN-003` ingest (CSV hub `F-CONN-005`)
+- Dagster scheduled RM-1 sync ops
+- Web OAuth-style connect forms for Uni/Shiprocket/Razorpay (API/CLI today)
+
+**Next:** `F-CONN-005` CSV hub or `F-ID-001`.
+
+---
+
+## Scrutiny Validation — 2026-05-21 — FAIL
+
+**Scope:**
+
+1. **SHIP** — `F-CONN-002`, `F-CONN-004`, `F-CONN-006` (+ Tally health row)
+2. **Regression:** full API, RM-1 connector tests, web build
+3. **Re-check:** prior UI/health SHIP fixes (Shopify health mocks)
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest tests/test_connectors_rm1.py tests/test_integration_health.py -q` | **8 passed** |
+| `pnpm --filter @trita/web build` | **exit 0** |
+| `pytest trita/apps/api/tests/ -q` | **47 passed, 1 FAILED**, 3 skipped |
+| `git grep` / `.env` | clean; `.env` gitignored |
+
+### Blocker (FAIL)
+
+**`test_shopify_sync.py::test_sync_pulls_and_writes_raw`** — **404** (expected 200).
+
+**Root cause:** `sources_router` (`POST /v1/sources/{source}/sync`) is registered **before** `shopify_router` in `main.py`. `POST /v1/sources/shopify/sync` matches the generic RM-1 handler with `source=shopify`, which is **not** in `RM1_API_SOURCES` → **404 Unknown connector**. Shopify OAuth sync path is **broken in production**, not only in tests.
+
+**PATCH options (Worker):** register `shopify_router` before `sources_router`, or delegate `shopify` in `sync_connector_route` to existing Shopify sync, or mount RM-1 routes under a non-colliding prefix.
+
+### Per-assertion — RM-1 SHIP
+
+| VA / task | Verdict | Notes |
+|-----------|---------|-------|
+| **VA-01** | **PASS** (RM-1 routes) | `TenantDep` + `reject_tenant_override` on connect body |
+| **VA-02** | **PASS** (contract) | Raw tables + RLS pattern in migration |
+| **VA-06** | **PASS** | 5 honest sources; Tally `csv_hub` / F-CONN-005 message |
+| **VA-05** (partial) | **PARTIAL** | dbt gold extensions claimed in handoff — not re-run live in scrutiny |
+| **F-CONN-003** | **PASS** (honest) | Tally row disconnected until CSV hub — not fake connected |
+| Stubs | **PASS** | Fixture ingest writes real `raw.*_events` via `write_raw_events` |
+| **Regression** | **FAIL** | Shopify sync route shadowing |
+
+### Code review highlights
+
+| Area | Verdict |
+|------|---------|
+| Connector registry | **PASS** — modes + SLA; `RM1_API_SOURCES` scoped |
+| Dev fixtures | **PASS** — `CONNECTOR_DEV_FIXTURES` gated |
+| Sources UI | **PASS** — 5 rows only (no RM-4 fake badges) |
+| **Shopify coexistence** | **FAIL** — router order regression |
+
+### Sub-feature verdicts
+
+| Feature | Verdict |
+|---------|---------|
+| `F-CONN-002`, `004`, `006` (scoped tests) | **PASS** |
+| `F-UI-SOURCES` / health (regression) | **FAIL** via Shopify sync break |
+| RM-0 RETRO gate | **At risk** — `verify_rm0_gate.py` may still pass DB paths; API Shopify sync broken |
+
+**VERDICT:** **FAIL** — fix Shopify/`sources` route conflict before RM-1 merge or gate sign-off.
+
+---
+
+## Scrutiny Validation — 2026-05-21 — PASS (PATCH: Shopify route order)
+
+**PATCH:** Register `shopify_router` before `sources_router` in `trita_api/main.py` so `POST /v1/sources/shopify/sync` hits Shopify OAuth sync, not RM-1 `{source}/sync` (404 Unknown connector).
+
+### Verification (post-PATCH)
+
+| Check | Result |
+|-------|--------|
+| `pytest tests/test_shopify_sync.py tests/test_connectors_rm1.py -q` | **6 passed** |
+| `pytest trita/apps/api/tests/ -q` | **48 passed**, 3 skipped |
+
+### Per-assertion (RM-1 batch)
+
+| Item | Verdict |
+|------|---------|
+| F-CONN-002, 004, 006 | **PASS** |
+| F-CONN-003 (Tally) | **PASS** |
+| Shopify regression | **PASS** |
+| VA-01 (connect override) | **PASS** |
+
+**VERDICT:** **PASS** (RM-1 connector SHIP + Shopify regression) — **Ready for re-validation**
+
+---
+
 ## RETRO — Milestone 1 (RM-0) close — 2026-05-21
 
 **Verdict:** **GO** → RM-1 active (Milestone 2)
