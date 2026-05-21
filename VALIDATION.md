@@ -17,7 +17,7 @@
 
 ### Deterministic engine (all milestones)
 
-- [ ] **VA-03:** No code path lets LLM compute reorder qty, cover days, or ₹ impact
+- [x] **VA-03:** No code path lets LLM compute reorder qty, cover days, or ₹ impact _(pytest `test_llm_draft.py` — system prompt + output pattern guard on `/v1/llm/draft`)_
 
 ### Data ingest (Milestone 1 — RM-0)
 

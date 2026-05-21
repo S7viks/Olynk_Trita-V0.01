@@ -19,7 +19,7 @@
 ### Process gaps (debt — not blocking RM-0)
 
 - **Scrutiny / BEHAVE** not recorded for SHIP `F-UI-NAV` / `F-CONN-HEALTH` (2026-05-21) — run before first RM-1 merge or at RM-1 mid-review
-- Large workspace delta **uncommitted** until this RETRO commit
+- RETRO doc sweep committed as `5e3475c` (restore from HEAD if working tree drifts)
 - **T-P0-003** `service_role` path audit still open
 
 ### Next worker (RM-1)
