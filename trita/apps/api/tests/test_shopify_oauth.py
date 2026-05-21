@@ -44,11 +44,13 @@ def test_connect_redirects_to_shopify() -> None:
     assert "client_id=test-client-id" in location
 
 
+@patch("trita_api.routes.shopify.upsert_integration_health")
 @patch("trita_api.routes.shopify.exchange_code")
 @patch("trita_api.routes.shopify.upsert_shopify_credential")
 def test_callback_stores_token_and_redirects(
     mock_upsert: MagicMock,
     mock_exchange: MagicMock,
+    mock_health: MagicMock,
 ) -> None:
     tenant_id = uuid4()
     shop = "yoga-bar.myshopify.com"

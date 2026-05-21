@@ -73,6 +73,7 @@ def _sync_direct(tenant_id: UUID) -> dict[str, Any]:
     )
     if stats["events"] == 0:
         raise RuntimeError("No Shopify records fetched — check scopes and store data")
+
     return {
         "mode": "direct",
         "orders_fetched": len(orders),

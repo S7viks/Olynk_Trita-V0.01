@@ -108,7 +108,9 @@ def complete_draft(*, tenant_id: UUID, prompt: str, purpose: str = "card_copy") 
         return _fallback_response(tenant_id, "invalid_proxy_response")
 
     usage = body.get("usage") or {}
-    total_tokens = int(usage.get("total_tokens") or 0)
+    prompt_tokens = int(usage.get("prompt_tokens") or 0)
+    completion_tokens = int(usage.get("completion_tokens") or 0)
+    total_tokens = int(usage.get("total_tokens") or prompt_tokens + completion_tokens)
     record_usage(tenant_id, total_tokens)
 
     result = _sanitize_or_fallback(text, tenant_id)

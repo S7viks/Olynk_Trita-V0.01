@@ -61,7 +61,7 @@
 | -------- | ------------------------------------ | -------- | -------- | --------------------------- |
 | T-P0-030 | LiteLLM proxy deploy (Gemini + Groq) | Backend  | —        | Health + test completion    |
 | T-P0-031 | Per-tenant budget config             | Backend  | T-P0-030 | Hard cap returns fallback   |
-| T-P0-032 | OpenMeter meters wired               | Platform | T-P0-030 | Events visible in dashboard |
+| T-P0-032 | OpenMeter meters wired               | Platform | T-P0-030 | **Deferred** — RM-4+ (not RM-0 spine) |
 | T-P0-033 | OTEL basic traces api ↔ llm          | Platform | T-P0-004 | Trace in collector          |
 
 
@@ -99,12 +99,13 @@
 
 ## Deliverables checklist
 
-- CI: tenant isolation green
-- Shopify → raw → staging → gold (minimal)
-- Integration health API + UI row
-- LiteLLM + OpenMeter events
-- Render stable for demo
-- Orchestrator runs one pipeline
+- [x] CI: tenant isolation green
+- [x] Shopify → raw → staging → gold (minimal) — Yoga Bar 45 raw / 27 `gold.dim_sku`
+- [x] Integration health API + UI row — `healthy` on Sources
+- [x] LiteLLM (budget + fallback); OpenMeter **not** in RM-0
+- [ ] Render stable for demo (VA-10 deferred — local dev)
+- [x] Orchestrator runs one pipeline (VA-09)
+- [x] RM-0 gate: no decision cards (VA-12)
 
 ---
 

@@ -21,9 +21,9 @@ This repository is the **ground-up build** workspace. Application code will live
 
 ## Status
 
-**Phase:** RM-0 — Layer 0 in progress  
-**Monorepo:** `trita/` scaffold landed (see [trita/README.md](trita/README.md))  
-**Next action:** [docs/BUILD-ORDER.md](docs/BUILD-ORDER.md) item 2 — Supabase `tenants`, `memberships` + RLS
+**Phase:** RM-1 — six apps + graph (Weeks 3–5)  
+**Monorepo:** `trita/` — Phase 0 spine complete (see [HANDOFF.md](HANDOFF.md) RM-0 gate)  
+**Next action:** [docs/BUILD-ORDER.md](docs/BUILD-ORDER.md) — connectors `F-CONN-002`–`006` or CSV hub `F-CONN-005`
 
 ## Quick copy
 

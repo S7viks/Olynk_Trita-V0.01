@@ -75,18 +75,38 @@ TRITA_RUN_VA05=1 C:\Python313\python.exe -m pytest tests/test_va05_yoga_bar.py -
 ## Suite: health_api (VA-06)
 
 ```bash
-# TBD — integration health endpoint returns status + last_sync
-curl -s -H "Authorization: Bearer $TEST_JWT" "$API_URL/v1/integrations/health" | jq .
-# Expected: exit 0 from test wrapper; Shopify row present
+cd trita/apps/api
+python -m pytest tests/test_integration_health.py -q
+# Expected: exit 0 — Shopify row shape; tenant isolation
+
+# Live (optional, requires DATABASE_URL + migration 20260520500000):
+# TEST_JWT from dev/auth/token or mint_test_token with YOGA_BAR_TENANT_ID
+curl -s -H "Authorization: Bearer $TEST_JWT" "$API_URL/v1/integrations/health"
+```
+
+## Suite: rm0_gate (MISSION item 15)
+
+```bash
+python scripts/verify_rm0_gate.py
+# Expected: exit 0 — raw>0, gold.dim_sku>0, integration_health=healthy, no decision tables
+```
+
+## Suite: web_auth (T-P0-040)
+
+```bash
+cd trita
+pnpm install
+pnpm --filter @trita/web build
+# Expected: exit 0 — Next.js compiles with auth + 7-route shell
 ```
 
 ---
 
-## Suite: llm_meter (VA-07, VA-08)
+## Suite: llm (VA-07)
 
 ```bash
-# TBD — budget cap + OpenMeter event
-pytest trita/apps/api/tests/test_llm_budget.py -q
+cd trita/apps/api
+python -m pytest tests/test_llm_budget.py tests/test_llm_draft.py -q
 ```
 
 ---

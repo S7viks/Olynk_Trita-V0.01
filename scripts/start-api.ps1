@@ -1,4 +1,4 @@
-# Start Trita FastAPI locally (PowerShell — repo path has a space in "Olynk_V 0.0.1")
+# Start Trita FastAPI locally (repo path may contain a space in Olynk_V 0.0.1)
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $ApiDir = Join-Path $RepoRoot "trita\apps\api"

@@ -14,7 +14,7 @@
 - **Database:** Supabase Postgres + Auth + pgvector; RLS on all tenant data
 - **Auth:** Supabase Auth; `tenant_id` from JWT only
 - **Deployment target:** Local dev (Phase 0 default); later Vercel (web), Render/Fly (API), Supabase (data)
-- **Key libraries:** dlt, dbt + dbt-expectations, **Dagster** (ADR-001 Accepted), LiteLLM (Gemini/Groq), OpenMeter, DoWhy
+- **Key libraries:** dlt, dbt + dbt-expectations, **Dagster** (ADR-001 Accepted), LiteLLM (Gemini/Groq), DoWhy _(OpenMeter deferred — RM-4+)_
 
 ## Features (ordered by priority)
 
@@ -30,11 +30,11 @@
 8. [x] dlt raw envelope + Shopify tap — `F-INGEST-SHOPIFY`, `T-P0-010`–`T-P0-011`
 9. [x] Shopify **OAuth** + API sync — `T-P0-011`, `T-P0-013` _(webhooks/HMAC `T-P0-012` deferred; **VA-04** deferred)_
 10. [x] dbt staging + gold shell — `F-GRAPH-SHELL`, `T-P0-020`–`T-P0-021`
-11. [ ] LiteLLM + OpenMeter — `F-PLAT-003` **done**, `F-PLAT-004` planned, `T-P0-030`–`T-P0-032` _(OpenMeter T-P0-032 pending)_
-12. [ ] Next auth + Sources shell — `F-UI-NAV`, `F-UI-SOURCES-SHELL`, `T-P0-040`–`T-P0-042`
-13. [ ] Integration health API — `F-CONN-HEALTH`
+11. [x] LiteLLM proxy + budgets — `F-PLAT-003`, `T-P0-030`–`T-P0-031` _(OpenMeter `F-PLAT-004` / `T-P0-032` **out of RM-0** — not required to build)_
+12. [x] Next auth + Sources shell — `F-UI-NAV`, `F-UI-SOURCES-SHELL`, `T-P0-040`–`T-P0-042`
+13. [x] Integration health API — `F-CONN-HEALTH`
 14. [x] Dagster job: ingest → dbt — `P-ORCH-DAILY-SHELL`, `T-P0-051`
-15. [ ] **Gate (RM-0):** Yoga Bar — Shopify → raw → gold; health row visible; **no** decision cards
+15. [x] **Gate (RM-0):** Yoga Bar — Shopify → raw → gold; health row visible; **no** decision cards _(2026-05-21: `scripts/verify_rm0_gate.py` — raw=45, gold.dim_sku=27, health=healthy; VA-12 no decision tables)_
 
 ### Milestone 2 — RM-1: Six apps + graph (Weeks 3–5)
 
@@ -131,7 +131,7 @@ Granular tasks: [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/roadmap/`](docs/roa
 
 ## Status
 
-Current Milestone: 1 (RM-0)
-Active Feature: Next auth + Sources shell — `T-P0-040`–`T-P0-042` or OpenMeter `F-PLAT-004`
+Current Milestone: **2** (RM-1)
+Active Feature: Connectors 2–4, 6 (API/scheduled) — `F-CONN-002`, `003`, `004`, `006`; or CSV hub `F-CONN-005`
 Pilot tenant: Yoga Bar
-Last Updated: 2026-05-20 (local-first dev; cloud deploy deferred)
+Last Updated: 2026-05-21 (RETRO — RM-0 closed)

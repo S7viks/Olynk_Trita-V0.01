@@ -17,7 +17,7 @@ if (-not $tenantId) {
 $api = $env:NEXT_PUBLIC_API_URL
 if (-not $api) { $api = "http://localhost:8000" }
 
-Write-Host "Step 4 — open in browser:"
+Write-Host "Step 4 - open in browser:"
 $shop = if ($env:YOGA_BAR_SHOP_DOMAIN) { ($env:YOGA_BAR_SHOP_DOMAIN -replace '\.myshopify\.com$','') } else { 'tritabyolynk' }
 Write-Host "$api/dev/shopify/go?tenant_id=$tenantId&shop=$shop"
 Write-Host ""

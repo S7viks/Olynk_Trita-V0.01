@@ -53,7 +53,7 @@ Orchestrator: **Dagster** (ADR-001 Accepted). All jobs must be **idempotent** by
 |----|----------|-------|---------|
 | P-ORCH-DAILY-SHELL | manual | 0 | ingest → dbt chain — [spec](./P-ORCH-DAILY-SHELL.md) |
 | P-LLM-PROXY | always on | 0 | LiteLLM service |
-| P-METER-EXPORT | 5m | 0 | OpenMeter flush |
+| P-METER-EXPORT | 5m | 4+ | OpenMeter — **deferred** [P-METER-EXPORT.md](./P-METER-EXPORT.md) |
 | P-DIGEST-EMAIL | cron | 3 | Email digest |
 | P-DIGEST-SLACK | cron | 3 | Slack digest |
 | P-IDENTITY-REFRESH | nightly | 1 | SKU alias suggestions |

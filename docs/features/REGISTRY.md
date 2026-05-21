@@ -14,7 +14,7 @@ Track status in the **Status** column: `planned` | `in_progress` | `done` | `def
 | F-PLAT-001 | Supabase tenant + RLS | 0 | **done** | — | Membership roles; tenant scoped |
 | F-PLAT-002 | Tenant isolation CI | 0 | **done** | F-PLAT-001 | Cross-tenant tests fail closed |
 | F-PLAT-003 | LiteLLM proxy + budgets | 0 | **done** | — | Gemini/Groq; cap → fallback; VA-07 |
-| F-PLAT-004 | OpenMeter wiring | 0 | planned | F-PLAT-003 | All meters emit |
+| F-PLAT-004 | OpenMeter wiring | 4 | **deferred** | F-PLAT-003 | RM-4+ / unit economics; not RM-0 |
 | F-SEC-001 | Cross-tenant red team | 4 | planned | F-PLAT-002 | Documented pass |
 | F-SEC-002 | Chat injection / hallucination tests | 4 | planned | F-CHAT-001 | Refuse without evidence |
 | F-OPS-001 | Pilot evidence pack template | 4 | planned | F-OUTCOME-* | Weekly ₹ conservative |
@@ -26,7 +26,7 @@ Track status in the **Status** column: `planned` | `in_progress` | `done` | `def
 
 | ID | Name | Phase | Deps | Acceptance criteria |
 |----|------|-------|------|---------------------|
-| F-CONN-HEALTH | Integration health API | 0 | F-INGEST-SHOPIFY | status, last_sync, SLA |
+| F-CONN-HEALTH | Integration health API | 0 | **done** | F-INGEST-SHOPIFY | `GET /v1/integrations/health`; VA-06 |
 | F-INGEST-SHOPIFY | Shopify ingest | 0 | **done** | OAuth + API→raw; VA-05 gold path; webhooks (VA-04) deferred |
 | F-CONN-001 | Shopify production | 1 | F-INGEST-SHOPIFY | Webhooks + scheduled |
 | F-CONN-002 | Unicommerce | 1 | F-CONN-001 | Inventory in gold |
@@ -40,7 +40,7 @@ Track status in the **Status** column: `planned` | `in_progress` | `done` | `def
 | F-CONN-010 | Amazon | 4 | F-CONN-005 | CSV via hub (min); beta API ok |
 | F-GA4 | GA4 connector | 4 | — | Sessions in matrix |
 | F-UI-SOURCES | Sources page | 1 | F-CONN-HEALTH | 6 then 10 rows |
-| F-UI-SOURCES-SHELL | Sources shell | 0 | F-CONN-HEALTH | Real Shopify health row only; no fake connected badges |
+| F-UI-SOURCES-SHELL | Sources shell | 0 | **done** | F-CONN-HEALTH | `/sources` + health table; Shopify only in RM-0 |
 
 Spec: [connect-sources.md](./connect-sources.md)
 
@@ -88,7 +88,7 @@ Spec: [decision-inbox.md](./decision-inbox.md)
 
 | ID | Name | Phase | Deps | Acceptance criteria |
 |----|------|-------|------|---------------------|
-| F-UI-NAV | 7-route navigation | 0 | — | Matches product map |
+| F-UI-NAV | 7-route navigation | 0 | **done** | — | Matches product map |
 | F-UI-FEED | Home proactive feed | 2 | F-INBOX-001 | Today’s cards |
 | F-UI-INVENTORY-LIST | Inventory SKU view | 1 | F-METRICS-001 | Sort aging, cover |
 | F-REPORT-HEALTH | Data health report | 1 | F-CONN-HEALTH | Counts match API |

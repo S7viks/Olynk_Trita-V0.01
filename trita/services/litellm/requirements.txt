@@ -1,0 +1,4 @@
+# LiteLLM proxy (P-LLM-PROXY) — use same Python as API (typically C:\Python312)
+# Full [proxy] extra can fail on Windows (uvloop); install minimal deps + existing litellm.
+apscheduler>=3.10.0
+fastapi-sso>=0.16.0

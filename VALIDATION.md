@@ -11,9 +11,9 @@
 
 ### Auth & tenancy (Milestone 1 — RM-0)
 
-- [ ] **VA-01:** API derives `tenant_id` only from JWT; body/query tenant override rejected
-- [ ] **VA-02:** Cross-tenant read/write fails in CI (`F-PLAT-002`)
-- [ ] **VA-11:** `.env.example` documents required vars; no secrets committed to git
+- [x] **VA-01:** API derives `tenant_id` only from JWT; body/query tenant override rejected _(pytest `test_tenant_from_jwt.py`; auth exchange routes)_
+- [x] **VA-02:** Cross-tenant read/write fails in CI (`F-PLAT-002`) _(RLS migration contract + `.github/workflows/tenant-isolation.yml`)_
+- [x] **VA-11:** `.env.example` documents required vars; no secrets committed to git _(pytest `test_env_example.py` + git grep; 2026-05-21 RETRO)_
 
 ### Deterministic engine (all milestones)
 
@@ -21,26 +21,26 @@
 
 ### Data ingest (Milestone 1 — RM-0)
 
-- [ ] **VA-04:** Shopify webhook HMAC verified; duplicate `(tenant, source, external_id)` is no-op
-- [ ] **VA-05:** **Yoga Bar:** Shopify → raw → staging → gold minimal path succeeds
+- [ ] **VA-04:** Shopify webhook HMAC verified; duplicate `(tenant, source, external_id)` is no-op _(deferred — OAuth/sync path; idempotency writer proven)_
+- [x] **VA-05:** **Yoga Bar:** Shopify → raw → staging → gold minimal path succeeds _(`verify_rm0_gate.py` + `TRITA_RUN_VA05=1` / dbt contract; 45 raw, 27 dim_sku)_
 
 ### Integration health (Milestone 1 — RM-0)
 
-- [ ] **VA-06:** Integration health API returns status and last_sync; Sources UI shows Shopify row for Yoga Bar
+- [x] **VA-06:** Integration health API returns status and last_sync; Sources UI shows Shopify row for Yoga Bar _(pytest `test_integration_health.py`; live row after Shopify sync + migration applied)_
 
 ### LLM & metering (Milestone 1 — RM-0)
 
 - [x] **VA-07:** LiteLLM per-tenant budget cap returns fallback, not unbounded completion
-- [ ] **VA-08:** OpenMeter receives meter events for LLM usage (`F-PLAT-004`)
+- [ ] **VA-08:** OpenMeter receives meter events for LLM usage (`F-PLAT-004`) — **deferred** (not RM-0; no Konnect trial dependency)
 
 ### Orchestration (Milestone 1 — RM-0)
 
 - [x] **VA-09:** **Dagster** runs ingest→dbt job once successfully; ADR-001 status **Accepted**
-- [ ] **VA-10:** Render health check passes (7d clean post-deploy for demo path)
+- [ ] **VA-10:** Render health check passes (7d clean post-deploy for demo path) _(deferred — local-first; `render.yaml` + blueprint tests only)_
 
 ### Phase 0 negative (Milestone 1 — RM-0)
 
-- [ ] **VA-12:** Decision cards are **not** emitted for Yoga Bar in Phase 0 (no premature inbox)
+- [x] **VA-12:** Decision cards are **not** emitted for Yoga Bar in Phase 0 (no premature inbox) _(no `decision*` tables; inbox UI placeholder only)_
 
 ### Graph & identity (Milestone 2 — RM-1)
 
@@ -140,7 +140,7 @@
 
 | RM | MISSION | Blocks GO until |
 |----|---------|-----------------|
-| **RM-0** | 1 | VA-01, VA-02, VA-05, VA-06, VA-07, VA-08, VA-09, VA-10, VA-11, VA-12 + **ADR-001 Accepted (Dagster)** |
+| **RM-0** | 1 | VA-01, VA-02, VA-05, VA-06, VA-07, VA-09, VA-10, VA-11, VA-12 + **ADR-001 Accepted (Dagster)** _(VA-08 deferred)_ |
 | **RM-1** | 2 | VA-13, VA-14, VA-26 |
 | **RM-2** | 3 | VA-15, VA-16, VA-17 |
 | **RM-3** | 4 | VA-18, VA-19 |

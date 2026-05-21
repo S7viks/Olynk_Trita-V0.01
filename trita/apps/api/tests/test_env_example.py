@@ -27,8 +27,6 @@ REQUIRED_KEYS = frozenset(
         "LITELLM_TENANT_TOKEN_BUDGET",
         "GEMINI_API_KEY",
         "GROQ_API_KEY",
-        "OPENMETER_API_KEY",
-        "OPENMETER_URL",
         "SHOPIFY_CLIENT_ID",
         "SHOPIFY_CLIENT_SECRET",
         "SHOPIFY_OAUTH_REDIRECT_URI",

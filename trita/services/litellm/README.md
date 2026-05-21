@@ -10,6 +10,14 @@ Gemini (`gemini-cards`) for card/draft copy; Groq (`groq-chat`) for chat (RM-2+)
 # Proxy: http://127.0.0.1:4000
 ```
 
+**Windows:** bare `litellm --config` often fails (`apscheduler`, `fastapi_sso`, or `uvloop`). `start-litellm.ps1` uses `scripts/run_litellm_proxy.py` (asyncio loop + `config.yaml`). If port 4000 is stuck, stop the old process and restart.
+
+Smoke test (API in terminal 2):
+
+```powershell
+python scripts/test-llm-draft.py
+```
+
 Set in `.env`:
 
 ```

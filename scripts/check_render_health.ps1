@@ -1,4 +1,4 @@
-# VA-10 — curl Render (or local) API /health
+# VA-10 - curl Render (or local) API /health
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $EnvFile = Join-Path $RepoRoot ".env"

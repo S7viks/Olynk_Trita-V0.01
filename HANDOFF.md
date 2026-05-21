@@ -2,6 +2,101 @@
 
 ---
 
+## RETRO — Milestone 1 (RM-0) close — 2026-05-21
+
+**Verdict:** **GO** → RM-1 active (Milestone 2)
+
+### Gate evidence
+
+| Check | Result |
+|-------|--------|
+| `python scripts/verify_rm0_gate.py` | exit **0** — raw=45, gold.dim_sku=27, health=healthy, VA-12 |
+| `pytest trita/apps/api/tests/ -q` | **44 passed**, 3 skipped (post-RETRO: VA-11 + Shopify health mocks) |
+| ADR-001 | **Accepted** — `test_adr001_accepted.py` |
+| RM-0 blocking VAs | VA-01, 02, 05, 06, 07, 09, 11, 12 **checked** in VALIDATION |
+| Deferred (documented) | VA-04 webhooks, VA-08 OpenMeter, VA-10 Render 7d live |
+
+### Process gaps (debt — not blocking RM-0)
+
+- **Scrutiny / BEHAVE** not recorded for SHIP `F-UI-NAV` / `F-CONN-HEALTH` (2026-05-21) — run before first RM-1 merge or at RM-1 mid-review
+- Large workspace delta **uncommitted** until this RETRO commit
+- **T-P0-003** `service_role` path audit still open
+
+### Next worker (RM-1)
+
+1. Read MISSION items 16–21, [phase-1-six-apps-graph.md](docs/roadmap/phase-1-six-apps-graph.md)
+2. First SHIP candidate: `F-CONN-002` Unicommerce or `F-CONN-005` CSV hub (no stubs)
+3. Optional: `SCRUTINY` on web/auth/health SHIP; `TRITA_RUN_ISOLATION=1` for live RLS proof
+
+---
+
+## RM-0 GATE — Yoga Bar spine — 2026-05-21
+
+**Status:** Complete (MISSION item 15)
+
+### Evidence
+
+```text
+python scripts/verify_rm0_gate.py
+# tenant_id=901bec43-4f06-4bf4-bf76-a5d251242e43
+# raw.shopify_events=45  gold.dim_sku=27
+# integration_health=healthy (18 events, tritabyolynk.myshopify.com)
+# public decision tables=[]  → VA-12 PASS
+```
+
+### UI
+
+- http://localhost:3000/sources — Shopify row **healthy**, last sync visible
+- `/inbox` — placeholder only (no emitter)
+
+### Deferred (not blocking RM-0)
+
+- VA-10 Render 7d health (local `127.0.0.1:8000` instead)
+- VA-04 Shopify webhooks
+- VA-08 OpenMeter
+
+---
+
+## SHIP — F-UI-NAV, F-UI-SOURCES-SHELL, F-CONN-HEALTH (T-P0-040–042) — 2026-05-21
+
+**Status:** Complete  
+**Features:** `F-UI-NAV`, `F-UI-SOURCES-SHELL`, `F-CONN-HEALTH`  
+**Tasks:** `T-P0-040`, `T-P0-041`, `T-P0-042`
+
+### What was done
+
+- **API:** `GET /v1/integrations/health` (Shopify row only in RM-0); `public.integration_health` migration; upsert on Shopify OAuth/sync and Dagster `integration_health_op`
+- **Auth:** `POST /v1/auth/exchange` (Supabase user JWT → tenant JWT via membership); `POST /dev/auth/token` (Yoga Bar pilot, dev only)
+- **Web:** Next.js 14 app — 7-route nav, `/login`, `/sources` health table, middleware cookie `trita_access_token`
+- **Scripts:** `scripts/start-web.ps1`
+
+### Commands run
+
+```powershell
+cd trita/apps/api
+python -m pytest tests/test_integration_health.py tests/test_auth_exchange.py tests/test_health.py -q
+# 7 passed
+
+cd trita
+pnpm --filter @trita/web build
+# exit 0
+```
+
+### RM-0 gate (item 15) — remaining
+
+- Live Yoga Bar: Shopify sync → green health row visible at http://localhost:3000/sources
+- Apply migration if not on project: `20260520500000_integration_health.sql` (applied via Supabase MCP in this session)
+
+### Local smoke
+
+```powershell
+.\scripts\start-api.ps1          # terminal 1
+.\scripts\start-web.ps1          # terminal 2
+# Login → Continue as Yoga Bar (dev) → /sources
+```
+
+---
+
 ## BASELINE — 2026-05-20
 
 **Status:** Complete
@@ -733,6 +828,41 @@ python -m pytest tests/test_render_blueprint.py tests/test_llm_budget.py tests/t
 
 - **Active:** OpenMeter `F-PLAT-004` / `T-P0-032` or Next auth `T-P0-040`
 - **F-PLAT-004** not in this SHIP
+
+---
+
+## SHIP — LiteLLM + OpenMeter (F-PLAT-003/004, T-P0-030–032) — 2026-05-20
+
+**Status:** Complete (awaiting Scrutiny)
+**Assertions:** **VA-07** (prior), **VA-08**, **T-P0-030**–**T-P0-032**
+
+### What was done
+
+- **F-PLAT-003** (already shipped): LiteLLM proxy, budget, `/v1/llm/draft`
+- **F-PLAT-004:** `trita_api/metering.py` — CloudEvents to OpenMeter; wired on LLM, Shopify sync, `run_dbt.py`
+- **T-P0-030/031:** Local LiteLLM + per-tenant token cap (documented)
+- **T-P0-032:** Six Phase 0 meters; `GET /v1/metering/status`; [P-METER-EXPORT.md](docs/pipelines/P-METER-EXPORT.md)
+- Tests: `tests/test_openmeter.py`; `scripts/verify-openmeter.ps1`
+
+### Commands run
+
+```bash
+cd trita/apps/api
+python -m pytest tests/test_llm_budget.py tests/test_llm_draft.py tests/test_openmeter.py -q
+# exit 0
+```
+
+### BEHAVE
+
+| Check | Verdict |
+|-------|---------|
+| **VA-08** | **PASS** — ingest contract + pytest |
+| **VA-07** | **PASS** — unchanged |
+
+### Notes
+
+- OpenMeter UI visibility requires `OPENMETER_URL` + `OPENMETER_API_KEY` in `.env` (optional for local dev)
+- **T-P0-033** OTEL deferred
 
 ---
 

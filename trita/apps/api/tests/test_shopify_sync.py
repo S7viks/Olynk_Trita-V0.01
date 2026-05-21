@@ -12,6 +12,7 @@ from tests.conftest import mint_test_token
 client = TestClient(app)
 
 
+@patch("trita_api.routes.shopify.upsert_integration_health")
 @patch("trita_api.routes.shopify.sync_records_to_raw")
 @patch("trita_api.routes.shopify.fetch_products")
 @patch("trita_api.routes.shopify.fetch_inventory_levels")
@@ -23,6 +24,7 @@ def test_sync_pulls_and_writes_raw(
     mock_inventory: MagicMock,
     mock_products: MagicMock,
     mock_sync: MagicMock,
+    mock_health: MagicMock,
 ) -> None:
     tenant_id = uuid4()
     mock_cred.return_value = ShopifyCredential(

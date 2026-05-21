@@ -1,4 +1,4 @@
-# Local dev health — API (+ optional LiteLLM)
+# Local dev health - API (+ optional LiteLLM)
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $EnvFile = Join-Path $RepoRoot ".env"
@@ -10,12 +10,23 @@ if (Test-Path $EnvFile) {
     }
 }
 
-$apiBase = if ($env:RENDER_HEALTH_URL) { $env:RENDER_HEALTH_URL } elseif ($env:NEXT_PUBLIC_API_URL) { $env:NEXT_PUBLIC_API_URL } else { "http://127.0.0.1:8000" }
+# Local dev: prefer NEXT_PUBLIC_API_URL; do not use remote RENDER_HEALTH_URL for this script
+$apiBase = if ($env:NEXT_PUBLIC_API_URL) { $env:NEXT_PUBLIC_API_URL } else { "http://127.0.0.1:8000" }
 $apiBase = $apiBase.TrimEnd("/")
 
-Write-Host "API health: $apiBase/health"
-& (Join-Path $RepoRoot "scripts\check_render_health.ps1")
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+$apiHealthUri = "$apiBase/health"
+Write-Host "API health: $apiHealthUri"
+try {
+    $apiResp = Invoke-WebRequest -Uri $apiHealthUri -UseBasicParsing -TimeoutSec 10
+    if ($apiResp.StatusCode -ne 200) {
+        Write-Error "API health failed: $($apiResp.StatusCode)"
+        exit 1
+    }
+    Write-Host "  OK ($($apiResp.StatusCode))"
+} catch {
+    Write-Host "  FAIL - start API: .\scripts\start-local.ps1" -ForegroundColor Red
+    exit 1
+}
 
 $litellm = $env:LITELLM_PROXY_URL
 if ($litellm) {
@@ -25,7 +36,7 @@ if ($litellm) {
         $r = Invoke-WebRequest -Uri "$litellm/health/liveliness" -UseBasicParsing -TimeoutSec 5
         Write-Host "  OK ($($r.StatusCode))"
     } catch {
-        Write-Host "  SKIP — LiteLLM not running (start .\scripts\start-litellm.ps1)" -ForegroundColor Yellow
+        Write-Host "  SKIP - LiteLLM not running (start .\scripts\start-litellm.ps1)" -ForegroundColor Yellow
     }
 }
 

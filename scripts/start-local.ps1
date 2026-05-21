@@ -1,12 +1,11 @@
 # Start Trita local dev stack (API; optional LiteLLM hint)
 # Usage: .\scripts\start-local.ps1
-# Docs: docs/LOCAL-DEV.md
 $ErrorActionPreference = "Stop"
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 $EnvFile = Join-Path $RepoRoot ".env"
 
 if (-not (Test-Path $EnvFile)) {
-    Write-Host "Missing .env — copy from .env.example first:" -ForegroundColor Yellow
+    Write-Host "Missing .env - copy from .env.example first:" -ForegroundColor Yellow
     Write-Host "  Copy-Item .env.example .env"
     exit 1
 }
@@ -24,7 +23,6 @@ if (-not $env:SUPABASE_JWT_SECRET -and -not $env:API_JWT_SECRET) {
     Write-Error "SUPABASE_JWT_SECRET or API_JWT_SECRET required in .env"
 }
 
-# Local defaults so health scripts and OAuth redirects work without Render/Fly
 if (-not $env:NEXT_PUBLIC_API_URL) { $env:NEXT_PUBLIC_API_URL = "http://127.0.0.1:8000" }
 if (-not $env:RENDER_HEALTH_URL) { $env:RENDER_HEALTH_URL = $env:NEXT_PUBLIC_API_URL }
 $env:ENVIRONMENT = "development"
@@ -48,4 +46,5 @@ if ($env:LITELLM_PROXY_URL -and $env:GEMINI_API_KEY) {
     Write-Host ""
 }
 
-& (Join-Path $RepoRoot "scripts\start-api.ps1")
+$ApiScript = Join-Path $RepoRoot "scripts\start-api.ps1"
+& $ApiScript

@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import time
 from typing import Any
 
 import psycopg
@@ -31,16 +32,19 @@ def dbt_run_op(shopify_sync: dict[str, Any]) -> dict[str, Any]:
     load_repo_env()
     if not RUN_DBT.is_file():
         raise Failure(description=f"run_dbt script missing: {RUN_DBT}")
+    started = time.perf_counter()
     proc = subprocess.run(
         [sys.executable, str(RUN_DBT), "run"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
     )
+    elapsed = time.perf_counter() - started
     if proc.returncode != 0:
         tail = (proc.stderr or proc.stdout or "")[-2000:]
         raise Failure(description=f"dbt run failed (exit {proc.returncode}): {tail}")
-    return {"exit_code": 0, "stdout_tail": (proc.stdout or "")[-500:]}
+
+    return {"exit_code": 0, "stdout_tail": (proc.stdout or "")[-500:], "dbt_seconds": elapsed}
 
 
 @op
@@ -70,5 +74,17 @@ def integration_health_op(dbt_run: dict[str, Any]) -> dict[str, int]:
         raise Failure(description=f"raw.shopify_events count is 0 for tenant {tenant_id}")
     if dim_sku_count <= 0:
         raise Failure(description=f"gold.dim_sku count is 0 for tenant {tenant_id}")
+
+    from datetime import UTC, datetime
+
+    from trita_api.integration_health import upsert_integration_health
+
+    upsert_integration_health(
+        tenant_id=tenant_id,
+        source="shopify",
+        status="healthy",
+        last_sync_at=datetime.now(UTC),
+        detail={"raw_events": raw_count, "gold_dim_sku": dim_sku_count},
+    )
 
     return {"raw_events": raw_count, "gold_dim_sku": dim_sku_count}
