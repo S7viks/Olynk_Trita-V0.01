@@ -2,6 +2,131 @@
 
 ---
 
+## SHIP — F-METRICS-001..004 — 2026-05-21
+
+**Mart:** `feat.sku_metrics_daily` (SKU × day) — velocity, cover, aging, stockout_risk, dead_stock, capital_at_risk, reorder_qty.
+
+### Metrics (deterministic engine — VA-03)
+
+| Feature | Columns / rules |
+|---------|-----------------|
+| F-METRICS-001 | `velocity_7d`, `velocity_30d`, `days_of_cover` |
+| F-METRICS-002 | `aging_days`, `dead_stock` (90d + velocity &lt; 1/week) |
+| F-METRICS-003 | `stockout_risk` when cover &lt; `lead_time_days * 1.2` |
+| F-METRICS-004 | `capital_at_risk` = on_hand × unit_cost; `cogs_missing` when no Tally COGS |
+
+### API
+
+| Method | Path |
+|--------|------|
+| GET | `/v1/metrics/sku` |
+| GET | `/v1/metrics/summary` |
+
+### Orchestration
+
+`daily_shell_job`: shopify_sync → dbt → identity_refresh → `dbt run --select sku_metrics_daily` → health check (requires metrics rows).
+
+### Verify
+
+```powershell
+python scripts/apply_migrations.py
+python scripts/run_dbt.py run
+python scripts/refresh_identity.py
+python scripts/run_dbt.py run --select sku_metrics_daily
+python scripts/verify_metrics_gate.py
+python -m pytest trita/apps/api/tests/test_metrics_api.py -q
+```
+
+**Next:** `F-REPORT-HEALTH` / `F-UI-INVENTORY-LIST`.
+
+---
+
+## Scrutiny Validation — 2026-05-21 — FAIL (F-METRICS-001..004)
+
+**Scope:**
+
+1. **SHIP** — `F-METRICS-001`..`004` (`feat.sku_metrics_daily`, `GET /v1/metrics/*`, Dagster `metrics_dbt_op`)
+2. **Regression** — identity, CSV, Shopify, RM-1; orchestration defs; web build
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` (no `DATABASE_URL`) | **57 passed**, **2 FAILED**, 3 skipped |
+| `pytest tests/test_metrics_api.py -q` | **2 FAILED** (`DATABASE_URL is required`) |
+| `python scripts/verify_metrics_gate.py` | **exit 0** — dim_sku=27, feat rows=27, aligned |
+| `pytest trita/data/orchestration/tests/test_daily_shell_defs.py -q` | **3 passed** |
+| `pnpm --filter @trita/web build` | **exit 0** |
+| `git grep` secrets | **clean** |
+
+### Blocker (FAIL)
+
+**`test_metrics_api.py::test_metrics_summary`** and **`test_metrics_sku_list`** — `RuntimeError: DATABASE_URL is required`.
+
+**Root cause:** Same as prior identity FAIL — `psycopg.connect(database_url(), …)` evaluates `database_url()` before `@patch("trita_api.routes.metrics.psycopg.connect")`.
+
+**PATCH (Worker):** Add `@patch("trita_api.routes.metrics.database_url", return_value="postgresql://test")` to both tests (mirror `test_identity_v1.py`); expect **59 passed** in full API suite.
+
+### Per-assertion
+
+| VA / item | Verdict | Notes |
+|-----------|---------|-------|
+| **VA-03** | **PASS** | Metrics in dbt `sku_metrics_daily.sql` only; API read-only; no LLM qty/cover/₹ |
+| **VA-01** | **PASS** (code) | `TenantDep`; SQL filters `tenant_id = %s` (JWT) |
+| **VA-14** | **PARTIAL** | `verify_metrics_gate.py` **PASS** live; **F-REPORT-HEALTH** UI not shipped; API tests **FAIL** |
+| F-METRICS-001..004 (mart) | **PASS** | Deterministic rules: velocity, cover, aging, stockout, dead_stock, capital_at_risk, reorder_qty |
+| F-METRICS (API SHIP) | **FAIL** | Route tests broken in default pytest env |
+| **VA-26** (carry-over) | **PARTIAL** | CSV idempotent/isolation tests still missing |
+| **VA-13** | **PASS** (carry-over) | Prior live `refresh_identity.py` |
+| Regression | **PASS** | Identity PATCH holds; connectors unchanged |
+
+### Code review highlights
+
+| Area | Verdict |
+|------|---------|
+| Sort/order query params | **PASS** — allowlisted via FastAPI `Query(pattern=…)` |
+| `feat` schema migration | **PASS** — `20260520900000_feat_schema.sql` + dbt table |
+| Orchestration | **PASS** — `metrics_dbt_op` after `identity_refresh_op` |
+| RLS on `feat.sku_metrics_daily` | **NOTE** — grant USAGE; reads via service role (T-P0-003 debt) |
+| Isolation test | **MISSING** — no cross-tenant metrics API test |
+| Web inventory UI | **N/A** — API only; `F-UI-INVENTORY-LIST` deferred |
+
+### Non-blocking notes
+
+- Live gate: `cogs_missing=27`, `capital_at_risk_total=0` — expected until Tally COGS populated on Yoga Bar.
+- `stockout_risk=0`, `dead_stock=27` — review fixture velocity/aging data, not a scrutiny blocker.
+
+**VERDICT:** **FAIL** — fix metrics API tests before merge. Re-run scrutiny after PATCH.
+
+---
+
+## Scrutiny Validation — 2026-05-21 — PASS (PATCH: F-METRICS-001..004)
+
+**PATCH:** `@patch("trita_api.routes.metrics.database_url", return_value="postgresql://test")` on `test_metrics_summary` and `test_metrics_sku_list` (same pattern as identity v1).
+
+### Verification (post-PATCH)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` (no `DATABASE_URL`) | **59 passed**, 3 skipped |
+| `pytest tests/test_metrics_api.py -q` | **2 passed** |
+| `python scripts/verify_metrics_gate.py` | **exit 0** (live, prior run) |
+
+### Per-assertion (metrics SHIP)
+
+| Item | Verdict |
+|------|---------|
+| F-METRICS-001..004 (mart + gate) | **PASS** |
+| F-METRICS (API routes) | **PASS** |
+| VA-01, VA-03 | **PASS** |
+| VA-14 | **PARTIAL** — gate script PASS; **F-REPORT-HEALTH** UI not in this SHIP |
+
+**VERDICT:** **PASS** (metrics SHIP) — **Ready for re-validation**
+
+---
+
 ## SHIP — F-ID-001, F-ID-002 Identity v1 — 2026-05-21
 
 **Package:** `trita/packages/ontology` — `refresh_identity()`, order key normalization, bridge stats.
@@ -36,6 +161,46 @@ curl -H "Authorization: Bearer <token>" http://127.0.0.1:8000/v1/identity/stats
 ```
 
 **Next:** `F-METRICS-001` or Data Health UI (`F-REPORT-HEALTH`).
+
+---
+
+## Scrutiny Validation — 2026-05-21 — PASS (re-run, no new SHIP)
+
+**Scope:** Re-validate HEAD — **F-ID-001/002** through RM-1 stack; no Worker SHIP since identity v1.
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` | **57 passed**, 3 skipped |
+| Regression bundle (identity + csv + shopify + rm1 + health) | **19 passed** |
+| `pnpm --filter @trita/web build` | **exit 0** |
+| `python scripts/verify_rm0_gate.py` | **exit 0** |
+| `python scripts/refresh_identity.py` | **exit 0** — `resolution_rate=1.0`, `meets_va13=True`, `aliases_upserted=27`, `bridge_full_rate=0.0` |
+| `git grep` secrets | **clean** |
+
+### Per-assertion
+
+| VA / item | Verdict |
+|-----------|---------|
+| F-ID-001 / F-ID-002 | **PASS** |
+| VA-01, VA-02, VA-03 | **PASS** |
+| **VA-13** | **PASS** (live Yoga Bar refresh) |
+| **VA-14** | **N/A** — Data Health UI not shipped |
+| **VA-26** | **PARTIAL** — no `test_csv_idempotent_replay` / upload status isolation tests |
+| RM-1 gate (#21) | **OPEN** |
+| Regression | **PASS** |
+
+### Open debt (unchanged)
+
+- CSV idempotent + cross-tenant upload status tests (**VA-26**)
+- Identity `/stats` cross-tenant isolation test
+- **T-P0-003** service_role audit
+- Order bridge `bridge_full_rate=0.0` until Razorpay/Shiprocket fixtures carry `channel_order_id` (non-blocking for SKU resolution gate)
+
+**VERDICT:** **PASS** — RM-1 code stable through identity SHIP. Gate #21 still needs CSV test debt closed + **F-REPORT-HEALTH** / metrics before sign-off.
 
 ---
 
@@ -116,6 +281,45 @@ curl -H "Authorization: Bearer <token>" http://127.0.0.1:8000/v1/identity/stats
 | VA-26 | **PARTIAL** (carry-over) |
 
 **VERDICT:** **PASS** (identity SHIP) — **Ready for re-validation**
+
+---
+
+## Scrutiny Validation — 2026-05-20 — PASS (independent re-run, identity PATCH confirmed)
+
+**Scope:** Confirm prior **FAIL** remediated; full RM-1 stack through **F-ID-001/002**; no new SHIP since identity v1.
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` (no `DATABASE_URL`) | **57 passed**, 3 skipped |
+| Identity + csv + shopify + rm1 bundle | **15 passed** |
+| `pnpm --filter @trita/web build` | **exit 0** |
+| `python scripts/verify_rm0_gate.py` | **exit 0** |
+| `git grep` secrets | **clean** |
+| Prior FAIL (`database_url` before mock) | **REMEDIATED** — `@patch identity.database_url` in `test_identity_v1.py` |
+
+### Per-assertion
+
+| VA / item | Verdict |
+|-----------|---------|
+| F-ID-001 / F-ID-002 | **PASS** |
+| VA-01, VA-02, VA-03 | **PASS** |
+| **VA-13** | **PASS** (live) — `python scripts/refresh_identity.py` → `resolution_rate=1.0`, `meets_va13=True` (Yoga Bar); `bridge_full_rate=0.0` (no shipment/payment bridge rows yet) |
+| **VA-26** | **PARTIAL** — `test_csv_idempotent_replay` / upload isolation still missing |
+| RM-1 gate (#21) | **OPEN** |
+| Regression (F-CONN-005, Shopify, RM-1) | **PASS** |
+
+### Open debt (unchanged)
+
+- CSV idempotent + cross-tenant upload status tests
+- Identity cross-tenant `/stats` isolation test
+- **T-P0-003** service_role audit
+- ~~Live Yoga Bar identity refresh for **VA-13**~~ — done 2026-05-21 (`meets_va13=True`, 27 aliases)
+
+**VERDICT:** **PASS** — identity SHIP merge-ready. **RM-1 gate (#21) still OPEN** until CSV VA-26 tests + gate scripts; next SHIP scrutiny: **F-METRICS-001** or **F-REPORT-HEALTH**.
 
 ---
 
@@ -1778,5 +1982,43 @@ git grep … SUPABASE_SERVICE_ROLE_KEY=
 | VA-10 (Render 7d) | **N/A** — local health **PASS** |
 
 **Overall: PASS** — No regressions vs prior BEHAVE (2026-05-21). RM-1 gate (MISSION 21) still needs **VA-26** live + idempotent test per Scrutiny debt.
+
+---
+
+## Behavioral (automated) — 2026-05-21 — PASS (F-ID-001)
+
+**BEHAVE role** — RM-0 + RM-1 + **F-ID-001 / F-ID-002** identity v1  
+**Scrutiny precondition:** **MET** — `Scrutiny Validation — 2026-05-21 — PASS (re-run, no new SHIP)`
+
+### Commands (fresh)
+
+| Command | Exit | Notes |
+|---------|------|-------|
+| `pytest trita/apps/api/tests/ -q` | **0** | **57 passed**, 3 skipped |
+| Bundle (+ `test_identity_v1.py`) | **0** | **35 passed** |
+| `python scripts/verify_rm0_gate.py` | **0** | raw=45, dim_sku=27, health=healthy, VA-12 |
+| `python scripts/refresh_identity.py` | **1** | `DuplicatePreparedStatement` on Supabase pooler (pgbouncer) |
+| Live VA-13 (`prepare_threshold=None`) | **0** | resolution_rate=1.0, meets_va13=True, aliases=27 |
+| `pytest trita/data/dlt/tests/ -q` | **0** | 6 passed, 1 skipped |
+| `pytest trita/data/dbt/tests/test_dbt_contract.py -q` | **0** | 6 passed |
+| `python scripts/run_dbt.py run` | **0** | **21** models |
+| `TRITA_RUN_VA05=1` `test_va05_yoga_bar.py` | **0** | 13.9s |
+| `TRITA_RUN_VA09=1` `test_va09_integration.py` | **0** | 24.3s |
+| `pnpm --filter @trita/web build` | **0** | |
+| `git grep` | **0** | clean |
+| `.\scripts\dev-health.ps1` | **0** | local API + LiteLLM |
+
+### VA summary
+
+| VA | Verdict |
+|----|---------|
+| **VA-01, VA-02, VA-03, VA-05, VA-06, VA-07, VA-09, VA-11, VA-12** | **PASS** |
+| **VA-13** | **PASS** — `test_identity_v1.py` + live refresh (pooler needs `prepare_threshold=None`; fix `refresh_identity.py` for BEHAVE ergonomics) |
+| **VA-14** | **N/A** — Data Health UI not shipped |
+| **VA-26** | **PARTIAL** — no idempotent CSV test |
+| VA-04, VA-08 | **DEFERRED** / **N/A** |
+| VA-10 | **N/A** — local health **PASS** |
+
+**Overall: PASS** — Identity SHIP behaviorally verified. **Non-blocking:** patch `scripts/refresh_identity.py` to use `psycopg.connect(..., prepare_threshold=None)` for pooler. RM-1 gate (#21) still open per Scrutiny (CSV debt + metrics/health UI).
 
 ---
