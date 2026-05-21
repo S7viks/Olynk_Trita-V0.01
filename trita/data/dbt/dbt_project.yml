@@ -1,0 +1,28 @@
+name: trita
+version: "0.0.1"
+config-version: 2
+profile: trita
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+target-path: "target"
+clean-targets:
+  - target
+  - dbt_packages
+
+vars:
+  yoga_bar_tenant_id: "{{ env_var('YOGA_BAR_TENANT_ID', '00000000-0000-0000-0000-000000000000') }}"
+
+models:
+  trita:
+    staging:
+      +schema: staging
+      +materialized: view
+    gold:
+      +schema: gold
+      +materialized: table
+    quarantine:
+      +schema: quarantine
+      +materialized: view

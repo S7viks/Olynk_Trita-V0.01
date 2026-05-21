@@ -1,0 +1,19 @@
+# LiteLLM proxy — P-LLM-PROXY (F-PLAT-003)
+# API calls model aliases below via LITELLM_PROXY_URL
+
+model_list:
+  - model_name: gemini-cards
+    litellm_params:
+      model: gemini/gemini-2.0-flash
+      api_key: os.environ/GEMINI_API_KEY
+  - model_name: groq-chat
+    litellm_params:
+      model: groq/llama-3.3-70b-versatile
+      api_key: os.environ/GROQ_API_KEY
+
+litellm_settings:
+  drop_params: true
+  set_verbose: false
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

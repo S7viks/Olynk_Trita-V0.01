@@ -1,0 +1,13 @@
+# Copy to ~/.dbt/profiles.yml or set DBT_PROFILES_DIR — do not commit real credentials.
+trita:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_HOST', '127.0.0.1') }}"
+      user: "{{ env_var('DBT_USER', 'postgres') }}"
+      password: "{{ env_var('DBT_PASSWORD', '') }}"
+      port: "{{ env_var('DBT_PORT', '5432') | int }}"
+      dbname: "{{ env_var('DBT_DATABASE', 'postgres') }}"
+      schema: "{{ env_var('DBT_SCHEMA', 'public') }}"
+      threads: 4

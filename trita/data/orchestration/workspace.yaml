@@ -1,0 +1,5 @@
+load_from:
+  - python_module:
+      module_name: trita_orchestration.definitions
+      location_name: trita_orchestration
+      working_directory: .

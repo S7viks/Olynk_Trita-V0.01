@@ -1,0 +1,15 @@
+node_modules/
+.pnpm-store/
+.next/
+out/
+dist/
+*.pyc
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+.env
+.env.local
+*.egg-info/
+.coverage
+htmlcov/

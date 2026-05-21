@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: dim_sku
+    description: Gold SKU dimension shell (Shopify variant grain)
+    columns:
+      - name: tenant_id
+        tests:
+          - not_null
+      - name: shopify_variant_id
+        tests:
+          - not_null
+          - unique
+
+  - name: fact_order_line
+    description: Gold order line fact (minimal RM-0 path)
+    columns:
+      - name: tenant_id
+        tests:
+          - not_null
+      - name: order_line_key
+        tests:
+          - not_null
+          - unique
+
+  - name: fact_inventory_daily
+    columns:
+      - name: tenant_id
+        tests:
+          - not_null
+      - name: inventory_daily_key
+        tests:
+          - not_null
+          - unique

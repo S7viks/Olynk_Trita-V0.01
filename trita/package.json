@@ -1,0 +1,14 @@
+{
+  "name": "trita",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Trita monorepo — OLynk Third Observer V0.0.1",
+  "scripts": {
+    "dev:web": "pnpm --filter @trita/web dev",
+    "build:web": "pnpm --filter @trita/web build",
+    "lint:web": "pnpm --filter @trita/web lint"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

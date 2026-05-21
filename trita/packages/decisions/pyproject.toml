@@ -1,0 +1,12 @@
+[project]
+name = "trita-decisions"
+version = "0.0.1"
+description = "Decision card contract, suppression, audit"
+requires-python = ">=3.11"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/trita_decisions"]

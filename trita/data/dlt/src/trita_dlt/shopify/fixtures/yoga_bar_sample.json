@@ -1,0 +1,20 @@
+{
+  "shop_domain": "yoga-bar.myshopify.com",
+  "orders": [
+    {
+      "id": 5001001,
+      "name": "#YB-1001",
+      "updated_at": "2026-05-19T10:00:00Z",
+      "line_items": [
+        { "variant_id": 101, "sku": "YB-GRANOLA-1KG", "quantity": 2 }
+      ]
+    }
+  ],
+  "inventory_levels": [
+    {
+      "inventory_item_id": 88001,
+      "available": 120,
+      "updated_at": "2026-05-19T09:00:00Z"
+    }
+  ]
+}

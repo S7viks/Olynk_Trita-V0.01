@@ -1,0 +1,35 @@
+name: tenant-isolation
+
+on:
+  push:
+    paths:
+      - "trita/apps/api/**"
+      - "infra/supabase/**"
+      - ".github/workflows/tenant-isolation.yml"
+  pull_request:
+    paths:
+      - "trita/apps/api/**"
+      - "infra/supabase/**"
+
+jobs:
+  va-01-va-02:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install API + dlt + dev deps
+        run: |
+          pip install -e trita/data/dlt
+          pip install -e "trita/apps/api[dev]"
+      - name: VA-01 auth_jwt + VA-02 RLS contract
+        working-directory: trita/apps/api
+        run: |
+          pytest tests/test_tenant_from_jwt.py tests/isolation/test_rls_migration_contract.py -q
+      - name: Shopify OAuth tests
+        working-directory: trita/apps/api
+        run: pytest tests/test_shopify_oauth.py tests/test_shopify_sync.py -q
+      - name: VA-11 regression (env example)
+        working-directory: trita/apps/api
+        run: pytest tests/test_env_example.py -q

@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: stg_shopify_order_lines
+    description: Exploded Shopify order line items from raw envelope
+    columns:
+      - name: tenant_id
+        tests:
+          - not_null
+      - name: order_id
+        tests:
+          - not_null
+      - name: variant_id
+        tests:
+          - not_null:
+              config:
+                severity: warn
+                where: "quantity > 0"
+
+  - name: stg_shopify_product_variants
+    columns:
+      - name: tenant_id
+        tests:
+          - not_null
+      - name: variant_id
+        tests:
+          - not_null

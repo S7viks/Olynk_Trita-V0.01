@@ -1,0 +1,1 @@
+"""Trita FastAPI application package."""

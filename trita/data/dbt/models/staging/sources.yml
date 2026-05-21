@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: raw
+    description: dlt raw envelope tables
+    schema: raw
+    tables:
+      - name: shopify_events
+        description: Shopify orders, inventory, products (JSON payload)
+        columns:
+          - name: tenant_id
+          - name: source
+          - name: external_id
+          - name: entity_type
+          - name: payload
+          - name: ingested_at
+          - name: lineage

@@ -1,0 +1,11 @@
+-- Optional manual seed for integration tests (TRITA_RUN_ISOLATION=1).
+-- Replace UUIDs with auth.users ids from your Supabase project after creating test users.
+
+-- Example (do not commit real user ids):
+-- INSERT INTO public.tenants (id, slug, display_name) VALUES
+--   ('11111111-1111-1111-1111-111111111101', 'tenant-a', 'Tenant A'),
+--   ('22222222-2222-2222-2222-222222222202', 'tenant-b', 'Tenant B')
+-- ON CONFLICT (slug) DO NOTHING;
+-- INSERT INTO public.memberships (tenant_id, user_id, role) VALUES
+--   ('11111111-1111-1111-1111-111111111101', '<user-a-uuid>', 'owner'),
+--   ('22222222-2222-2222-2222-222222222202', '<user-b-uuid>', 'owner');
