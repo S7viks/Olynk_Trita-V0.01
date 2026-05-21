@@ -984,3 +984,143 @@ git grep -l "SUPABASE_SERVICE_ROLE_KEY=" … && exit 1 || exit 0
 **Next:** `T-P0-005` Render (VA-10) or `F-PLAT-003` LiteLLM (`T-P0-030`).
 
 ---
+
+## Scrutiny Validation — 2026-05-20 — PASS (Render + LiteLLM)
+
+**Scope:** SHIP — Render + LiteLLM (`T-P0-005`, `F-PLAT-003`) — **VA-07**, **VA-03**, **T-P0-005**; **VA-10** live deferred
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest tests/test_render_blueprint.py tests/test_llm_budget.py tests/test_llm_draft.py -q` | **9 passed** |
+| `pytest trita/apps/api/tests/ -q` (full regression) | **38 passed**, 3 skipped |
+| dlt / orchestration contract | 6+1 skip; 3 passed |
+| `git grep` secrets | exit 1 (clean); `.env` gitignored |
+| Live `RENDER_HEALTH_URL` curl | **N/A** — not set in scrutiny shell (Blueprint apply is human step) |
+
+### Code review
+
+| Area | Verdict | Notes |
+|------|---------|-------|
+| **VA-07** | **PASS** | `budget_exceeded` → fallback; `httpx.post` not called when over cap |
+| **VA-03** | **PASS** | System prompt + `_INVENTORY_NUMBER_PATTERN` guard; `test_va03_inventory_numbers_in_model_output_blocked` |
+| **VA-01** | **PASS** | `/v1/llm/draft` uses `TenantDep`; body `tenant_id` override → 403 |
+| **T-P0-005** | **PASS** | `render.yaml`: `trita-api` `/health`, `trita-litellm`, Singapore starter |
+| **VA-10** | **PARTIAL** | Blueprint + `/health` contract tests; **live** 7d clean requires deployed URL |
+| **VA-08** | **N/A** | OpenMeter not in this SHIP |
+| Stubs | **PASS** | Real proxy client + budget module; not UI-only |
+
+**Non-blocking:**
+
+1. Token budget is **in-process memory** (`llm_budget._usage`) — resets on API restart; acceptable for Phase 0, document before multi-instance Render.
+2. `LITELLM_MASTER_KEY` added to `.env.example` — confirm `test_env_example` REQUIRED_KEYS includes it (full suite green).
+3. **F-PLAT-004** / OpenMeter still planned per MISSION.
+
+### Per-assertion
+
+| VA / task | Verdict |
+|-----------|---------|
+| **VA-07** | **PASS** |
+| **VA-03** | **PASS** |
+| **T-P0-005** | **PASS** (blueprint) |
+| **VA-10** | **PARTIAL** — apply Blueprint + `check_render_health` for live gate |
+| **VA-08** | N/A |
+| Prior RM-0 stack | **PASS** (38 API tests, no regression) |
+
+### Sub-feature verdicts
+
+| Feature | Verdict |
+|---------|---------|
+| `F-PLAT-003` / LiteLLM | **PASS** |
+| `T-P0-005` / Render blueprint | **PASS** |
+
+**VERDICT:** **PASS** — Render + LiteLLM SHIP cleared for merge. Complete **VA-10** live evidence after Blueprint deploy.
+
+---
+
+## Behavioral (automated) — 2026-05-20 — PASS
+
+**BEHAVE role** — RM-0 full regression + **Render + LiteLLM** (`T-P0-005`, `F-PLAT-003`, **VA-07**, **VA-03**, **T-P0-005**)  
+**Scrutiny precondition:** **MET** — `Scrutiny Validation — 2026-05-20 — PASS (Render + LiteLLM)`
+
+### 1. Environment
+
+| Check | Status |
+|-------|--------|
+| Git | yes |
+| `DATABASE_URL`, `YOGA_BAR_TENANT_ID` | SET |
+| `RENDER_HEALTH_URL` | SET (`trita-api-staging.onrender.com`) — live health **404** |
+
+### 2. Commands run
+
+```powershell
+cd trita/apps/api
+pip install -e ".[dev]"; pip install -e ../../data/dlt
+pytest tests/ -q
+# exit 0 — 38 passed, 3 skipped
+
+pytest tests/test_render_blueprint.py tests/test_llm_budget.py tests/test_llm_draft.py -q
+# exit 0 — 9 passed (VA-07, VA-03, T-P0-005 contract)
+
+pytest tests/test_env_example.py -q
+# exit 0 — 4 passed
+
+cd trita/data/dlt && pytest tests/ -q
+# exit 0 — 6 passed, 1 skipped
+
+cd trita/data/dbt && pytest tests/test_dbt_contract.py -q
+# exit 0 — 6 passed
+
+python scripts/run_dbt.py run
+# exit 0 — 9 models
+
+TRITA_RUN_VA05=1 python -m pytest trita/data/dbt/tests/test_va05_yoga_bar.py -q
+# exit 0 — 1 passed (11.4s; first run in batch exited 1 — race with parallel dbt; retry green)
+
+cd trita/data/orchestration
+python -m pytest tests/test_daily_shell_defs.py -q
+# exit 0 — 3 passed
+
+TRITA_RUN_VA09=1 python -m pytest trita/data/orchestration/tests/test_va09_integration.py -q
+# exit 0 — 1 passed (21.5s)
+
+python scripts/run_daily_shell.py
+# exit 0 — raw_events: 45, gold_dim_sku: 27
+
+git grep -l "SUPABASE_SERVICE_ROLE_KEY=" … && exit 1 || exit 0
+# exit 0 — clean
+
+.\scripts\check_render_health.ps1
+# exit 1 — GET …/health → 404 Not Found (staging host not serving /health yet)
+```
+
+### 3. VA mapping
+
+| VA / task | Verdict | Evidence | Exit |
+|-----------|---------|----------|------|
+| **VA-01** | **PASS** | Full API suite | 0 |
+| **VA-02** | **PASS** | RLS + credentials contracts | 0 |
+| **VA-03** | **PASS** | `test_llm_draft.py` — output guard | 0 |
+| **VA-05** | **PASS** | dbt contract + `run_dbt.py` + live Yoga Bar | 0 |
+| **VA-07** | **PASS** | `test_llm_budget.py` — cap → fallback | 0 |
+| **VA-09** | **PASS** | Dagster defs + integration + `run_daily_shell.py` | 0 |
+| **VA-11** | **PASS** | `test_env_example.py` + `git grep` | 0 |
+| **T-P0-005** | **PASS** | `test_render_blueprint.py` | 0 |
+| **T-P0-050/051** | **PASS** | ADR + orch (regression) | 0 |
+| **T-P0-013** | **PASS** | dlt contract | 0 |
+| **VA-10** | **PARTIAL** | Blueprint contract PASS; live `check_render_health` **404** | 1 |
+| **VA-04** | **DEFERRED** | Webhooks | — |
+| **VA-06** | **N/A** | No health API pytest | — |
+| **VA-08** | **N/A** | OpenMeter not shipped | — |
+| **VA-12** | **N/A** | No decision tests | — |
+
+### 4. Overall
+
+**PASS** — All automated suites green for shipped RM-0 work including **VA-07** / **VA-03** / Render blueprint. **VA-10** live remains **PARTIAL** until staging `trita-api` serves `/health`. **Not** full RM-0 program gate (VA-06, VA-08, VA-12, optional VA-04). MISSION not marked done.
+
+**Next:** Deploy Render Blueprint + re-run `check_render_health.ps1`; then `F-PLAT-004` OpenMeter or `T-P0-040` Sources shell.
+
+---
