@@ -2,6 +2,240 @@
 
 ---
 
+## SHIP — F-ID-001, F-ID-002 Identity v1 — 2026-05-21
+
+**Package:** `trita/packages/ontology` — `refresh_identity()`, order key normalization, bridge stats.
+
+### API
+
+| Method | Path |
+|--------|------|
+| POST | `/v1/identity/refresh` |
+| GET | `/v1/identity/stats` |
+| GET | `/v1/identity/unresolved` |
+| POST | `/v1/identity/aliases` (manual merge) |
+
+### Tables
+
+- `public.sku_alias` — shopify variant, unicommerce sku_code, tally sku → `canonical_sku_id`
+- `public.order_bridge` — normalized order key ↔ shipment + Razorpay payout
+
+### dbt
+
+- `gold.bridge_sku_alias`, `gold.fact_order_line_resolved`, `gold.bridge_order_fulfillment`
+
+### Verify (Yoga Bar)
+
+```powershell
+python scripts/apply_migrations.py
+pip install -e trita/packages/ontology
+# Re-sync Razorpay if payouts lack channel_order_id: .\scripts\connect_rm1_fixtures.ps1
+python scripts/run_dbt.py run
+python scripts/refresh_identity.py
+curl -H "Authorization: Bearer <token>" http://127.0.0.1:8000/v1/identity/stats
+```
+
+**Next:** `F-METRICS-001` or Data Health UI (`F-REPORT-HEALTH`).
+
+---
+
+## Scrutiny Validation — 2026-05-20 — FAIL (F-ID-001 / F-ID-002)
+
+**Scope:**
+
+1. **SHIP** — `F-ID-001`, `F-ID-002` identity v1 (`trita-ontology`, `/v1/identity/*`)
+2. **Regression** — CSV / Shopify / RM-1 connectors; web build; RM-0 gate
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` (default env, no `DATABASE_URL`) | **55 passed**, **2 FAILED**, 3 skipped |
+| `pytest tests/test_identity_v1.py -q` (with dummy `DATABASE_URL`) | **5 passed** (API route tests only pass when env set) |
+| Regression bundle (csv + shopify + rm1) | **10 passed** |
+| `pnpm --filter @trita/web build` | **exit 0** |
+| `python scripts/verify_rm0_gate.py` | **exit 0** |
+| `git grep` secrets | **clean** |
+
+### Blocker (FAIL)
+
+**`test_identity_v1.py::test_identity_refresh_endpoint`** and **`test_manual_alias_merge`** — `RuntimeError: DATABASE_URL is required`.
+
+**Root cause:** Routes call `psycopg.connect(database_url(), …)`. `database_url()` runs **before** `@patch("…psycopg.connect")` applies, and `conftest.py` does not set `DATABASE_URL` (unlike production `.env`). Unit tests for ontology pure functions pass; **API route tests fail in CI/default pytest**.
+
+**PATCH (Worker):** Patch `trita_api.routes.identity.database_url` (or add test `DATABASE_URL` in `conftest`), or mock connect at import site; re-run full suite → expect **57 passed**.
+
+### Per-assertion
+
+| VA / item | Verdict | Notes |
+|-----------|---------|-------|
+| **VA-01** | **PASS** (code) | `TenantDep` on all routes; `reject_tenant_override` on `/aliases` |
+| **VA-02** | **PASS** | `20260520800000_identity_v1.sql` — RLS SELECT on `sku_alias`, `order_bridge` |
+| **VA-13** | **PARTIAL** | `/stats` exposes `meets_va13`; no live Yoga Bar refresh proof in scrutiny |
+| **VA-03** | **PASS** | Ontology uses deterministic SQL/hash keys — no LLM inventory math |
+| F-ID-001 / 002 (package) | **PASS** | `normalize`, `bridge`, `identity` unit tests green |
+| F-ID-001 / 002 (API SHIP) | **FAIL** | Broken route tests in default env |
+| **VA-26** (carry-over) | **PARTIAL** | CSV idempotent / isolation tests still missing |
+| Regression | **PASS** | Shopify route order; prior connectors unchanged |
+
+### Code review highlights
+
+| Area | Verdict |
+|------|---------|
+| `refresh_identity` | **PASS** — tenant-scoped reads/writes from gold + raw |
+| Manual merge | **PASS** — upsert keyed `(tenant_id, source, external_id)` |
+| Isolation test | **MISSING** — no cross-tenant test on `/stats` or `/unresolved` |
+| Web UI | **N/A** — API/CLI only (acceptable for v1 SHIP) |
+| dbt | **PASS** (present) — `bridge_sku_alias`, `fact_order_line_resolved`, `bridge_order_fulfillment` |
+
+**VERDICT:** **FAIL** — fix identity API tests (DATABASE_URL / patch order) before merge. Re-run scrutiny after PATCH.
+
+---
+
+## Scrutiny Validation — 2026-05-20 — PASS (PATCH: F-ID-001 / F-ID-002)
+
+**PATCH:** `@patch("trita_api.routes.identity.database_url", return_value="postgresql://test")` on `test_identity_refresh_endpoint` and `test_manual_alias_merge` so `database_url()` does not run before `psycopg.connect` mock.
+
+### Verification (post-PATCH)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` (default env, no `DATABASE_URL`) | **57 passed**, 3 skipped |
+| `pytest tests/test_identity_v1.py -q` | **5 passed** |
+
+### Per-assertion (identity SHIP)
+
+| Item | Verdict |
+|------|---------|
+| F-ID-001 / F-ID-002 (package) | **PASS** |
+| F-ID-001 / F-ID-002 (API routes) | **PASS** |
+| VA-01 / VA-02 / VA-03 (code) | **PASS** |
+| VA-13 live | **PARTIAL** (not re-run) |
+| VA-26 | **PARTIAL** (carry-over) |
+
+**VERDICT:** **PASS** (identity SHIP) — **Ready for re-validation**
+
+---
+
+## SHIP — F-CONN-005 CSV hub (+ F-CONN-003 Tally path) — 2026-05-21
+
+**Features:** Production CSV hub — template detect, column map, validate, raw, quarantine, dbt `gold.sku_unit_cost`, Sources upload UI.
+
+### API
+
+| Method | Path |
+|--------|------|
+| POST | `/v1/csv/upload` (multipart) |
+| GET | `/v1/csv/templates` |
+| GET | `/v1/csv/uploads/{id}` |
+
+### Verify
+
+```powershell
+.\scripts\upload_tally_fixture.ps1
+python scripts/run_dbt.py run
+python -m pytest trita/apps/api/tests/test_csv_hub.py -q
+```
+
+**Next:** `F-ID-001` SKU alias / identity resolution.
+
+---
+
+## Scrutiny Validation — 2026-05-20 — PASS (re-run, no new SHIP)
+
+**Scope:** Re-validate current HEAD — **F-CONN-005** through RM-1 connector stack; no new Worker SHIP since prior CSV hub scrutiny.
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` | **52 passed**, 3 skipped |
+| Regression bundle (csv + shopify + rm1 + health) | **14 passed** |
+| `pnpm --filter @trita/web build` | **exit 0** |
+| `python scripts/verify_rm0_gate.py` | **exit 0** |
+| `git grep` secrets | **clean** |
+| `main.py` router order | `shopify_router` before `sources_router` |
+
+### Per-assertion (unchanged from prior pass)
+
+| VA / item | Verdict | Delta vs last scrutiny |
+|-----------|---------|------------------------|
+| F-CONN-005 / VA-01, 02, 06 | **PASS** | No regression |
+| **VA-26** | **PARTIAL** | Still **no** `test_csv_idempotent_replay`; live `upload_tally_fixture.ps1` not re-run |
+| **VA-05** | **PARTIAL** | dbt `sku_unit_cost` not re-run |
+| RM-1 gate (item 21) | **OPEN** | MISSION item 21 unchecked — gate not claimed |
+| **F-ID-001** | **N/A** | Not started (`trita-ontology` stub only) |
+
+### Open debt (still unaddressed)
+
+- `test_csv_idempotent_replay` — **missing**
+- `test_csv_upload_status_tenant_isolation` — **missing**
+- `GET /v1/csv/templates` unauthenticated (catalog only)
+- **T-P0-003** service_role audit — open
+
+**VERDICT:** **PASS** — codebase stable; prior PASS stands. Worker should add CSV idempotent + isolation tests and run Yoga Bar upload/dbt before **RM-1 gate (VA-26)** sign-off. Next SHIP scrutiny target: **F-ID-001**.
+
+---
+
+## Scrutiny Validation — 2026-05-20 — PASS (F-CONN-005 CSV hub)
+
+**Scope:**
+
+1. **SHIP** — `F-CONN-005` CSV hub (+ `F-CONN-003` Tally upload path)
+2. **Regression** — full API (52 tests), Shopify route order, RM-1 connectors, web build, RM-0 gate
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` | **52 passed**, 3 skipped |
+| `pytest tests/test_csv_hub.py -q` | **4 passed** |
+| `pytest test_csv_hub.py test_shopify_sync.py test_connectors_rm1.py -q` | **14 passed** |
+| `pnpm --filter @trita/web build` | **exit 0** |
+| `python scripts/verify_rm0_gate.py` | **exit 0** |
+| `git grep` `SUPABASE_SERVICE_ROLE_KEY=` (excludes) | **clean** |
+| `GET /v1/csv/templates` without auth | **200** (template catalog only — no tenant data) |
+
+### Per-assertion
+
+| VA / item | Verdict | Notes |
+|-----------|---------|-------|
+| **VA-01** | **PASS** | Upload/status use `TenantDep`; `reject_tenant_override` on form `tenant_id`; DB queries scoped `tenant_id` + `upload_id` |
+| **VA-02** | **PASS** | `20260520700000_csv_hub.sql` — RLS SELECT on `csv_upload`, `raw.csv_hub_events`, `quarantine.csv_hub` |
+| **VA-06** | **PASS** | Tally health updated with `mode: csv_hub`, quarantine counts in detail |
+| **VA-26** | **PARTIAL** | Idempotent `file_hash` implemented in `ingest.py`; **no automated test** for replay; live Yoga Bar upload script not re-run in scrutiny |
+| **VA-05** | **PARTIAL** | `gold.sku_unit_cost` model present; dbt run not re-executed in this pass |
+| F-CONN-005 | **PASS** | Template detect, quarantine path, fixture ingest unit tests |
+| F-CONN-003 (Tally) | **PASS** | Sources UI + web `POST /api/csv/upload` forwards JWT |
+| Shopify / RM-1 regression | **PASS** | `shopify_router` before `sources_router`; prior connector tests green |
+
+### Code review (SCRUTINY.md)
+
+| Area | Verdict |
+|------|---------|
+| Tenancy | **PASS** — JWT-only; no body `tenant_id` trust on happy path |
+| Secrets | **PASS** |
+| Deterministic engine | **PASS** — validation in `validate.py`; no LLM qty/₹ |
+| Decisions / Tier 3 | **N/A** |
+| Writes via `DATABASE_URL` | **NOTE** — same service-role pattern as other ingest; **T-P0-003** audit still open |
+
+### Non-blocking (before RM-1 gate sign-off)
+
+- Add `test_csv_idempotent_replay` (same `file_hash` → `idempotent_replay=True`, no double insert).
+- Add `test_csv_upload_status_tenant_isolation` (tenant B cannot read tenant A `upload_id`).
+- Consider `TenantDep` on `GET /v1/csv/templates` or document intentional public catalog.
+- Run `.\scripts\upload_tally_fixture.ps1` + `run_dbt.py` for **VA-26** live evidence on Yoga Bar.
+
+**VERDICT:** **PASS** — F-CONN-005 SHIP acceptable; close **VA-26** / RM-1 gate with live upload + idempotent test before claiming gate complete.
+
+---
+
 ## SHIP — F-CONN-002, F-CONN-004, F-CONN-006 (+ Tally health row) — 2026-05-21
 
 **Features:** Unicommerce, Shiprocket, Razorpay API connect/sync; `F-CONN-003` Tally shown as `csv_hub` (ingest blocked until `F-CONN-005`).
@@ -33,6 +267,62 @@ python -m pytest trita/apps/api/tests/test_connectors_rm1.py trita/apps/api/test
 - Web OAuth-style connect forms for Uni/Shiprocket/Razorpay (API/CLI today)
 
 **Next:** `F-CONN-005` CSV hub or `F-ID-001`.
+
+---
+
+## Scrutiny Validation — 2026-05-20 — PASS (independent re-run)
+
+**Scope:**
+
+1. **SHIP** — `F-CONN-002`, `F-CONN-004`, `F-CONN-006` (+ Tally health row)
+2. **Regression** — Shopify sync route order, full API suite, web build, RM-0 gate
+3. **Process** — RETRO gap: adversarial pass on RM-1 batch before merge
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` | **48 passed**, 3 skipped |
+| `pytest test_shopify_sync.py test_integration_health.py test_connectors_rm1.py -q` | **10 passed** |
+| `pnpm --filter @trita/web build` | **exit 0** |
+| `python scripts/verify_rm0_gate.py` | **exit 0** (raw=45, dim_sku=27, health=healthy, VA-12) |
+| `git grep` `SUPABASE_SERVICE_ROLE_KEY=` (excludes) | **clean** (exit 1) |
+| Route order (`main.py`) | `shopify_router` before `sources_router` |
+
+### Per-assertion
+
+| VA / item | Verdict | Notes |
+|-----------|---------|-------|
+| **VA-01** | **PASS** | `TenantDep` + `reject_tenant_override` on RM-1 connect |
+| **VA-02** | **PASS** | `20260520600000_connector_raw_rm1.sql` + tenant-scoped creds |
+| **VA-06** | **PASS** | 5 sources; Tally `csv_hub` honest until F-CONN-005 |
+| **VA-05** | **PARTIAL** | dbt gold extensions in SHIP — not re-run live in this pass |
+| **VA-12** | **PASS** | Gate script: no public decision tables |
+| F-CONN-002/004/006 | **PASS** | Fixture ingest + health mocks in tests |
+| F-CONN-003 (Tally) | **PASS** | Disconnected / blocked message — not fake API |
+| Shopify regression | **PASS** | `test_sync_pulls_and_writes_raw` **200** (was 404 pre-PATCH) |
+| **VA-08** | **N/A** | OpenMeter still deferred (`trita/services/openmeter/README.md` only) |
+| **VA-10** | **PARTIAL** | Local API health only; Render 7d not verified |
+
+### Code review (SCRUTINY.md)
+
+| Area | Verdict |
+|------|---------|
+| Tenancy | **PASS** — JWT-only `tenant_id` on connect/sync/health |
+| Secrets | **PASS** — no service role in tracked sources |
+| Deterministic engine | **PASS** — no LLM inventory math in connector paths |
+| Decisions / Tier 3 | **N/A** — no emitter changes |
+| Router coexistence | **PASS** — comment + order in `main.py` |
+
+### Non-blocking notes
+
+- Add explicit `test_router_shopify_before_sources` if route order regresses again.
+- **T-P0-003** `service_role` path audit still open (RETRO debt).
+- Historical HANDOFF **LiteLLM + OpenMeter** SHIP overstates VA-08; align doc or implement at RM-4.
+
+**VERDICT:** **PASS** — RM-1 connector SHIP + Shopify regression verified. Safe to proceed to next SHIP (`F-CONN-005` or `F-ID-001`).
 
 ---
 
@@ -1370,5 +1660,123 @@ git grep -l "SUPABASE_SERVICE_ROLE_KEY=" … && exit 1 || exit 0
 **PASS** — All automated suites green for shipped RM-0 work including **VA-07** / **VA-03** / Render blueprint. **VA-10** live remains **PARTIAL** until staging `trita-api` serves `/health`. **Not** full RM-0 program gate (VA-06, VA-08, VA-12, optional VA-04). MISSION not marked done.
 
 **Next:** Deploy Render Blueprint + re-run `check_render_health.ps1`; then `F-PLAT-004` OpenMeter or `T-P0-040` Sources shell.
+
+---
+
+## Behavioral (automated) — 2026-05-21 — PASS
+
+**BEHAVE role** — RM-0 regression + RM-1 (`F-CONN-002/004/006`, `F-CONN-005` CSV hub, UI/health)  
+**Scrutiny precondition:** **MET** — `PASS (F-CONN-005 CSV hub)`, `PASS (PATCH: Shopify route order)`, RM-0 RETRO **GO**
+
+### 1. Environment
+
+| Check | Status |
+|-------|--------|
+| Git | yes |
+| `DATABASE_URL`, `YOGA_BAR_TENANT_ID` | SET |
+| Render | **not used** — `RENDER_HEALTH_URL=http://127.0.0.1:8000`; `dev-health.ps1` OK |
+
+### 2. Commands run
+
+```powershell
+cd trita/apps/api
+pip install -e ".[dev]"; pip install -e ../../data/dlt
+pytest tests/ -q
+# exit 0 — 52 passed, 3 skipped
+
+pytest tests/test_integration_health.py tests/test_csv_hub.py tests/test_connectors_rm1.py tests/test_shopify_sync.py tests/test_llm_budget.py tests/test_llm_draft.py tests/test_adr001_accepted.py tests/test_render_blueprint.py tests/test_env_example.py -q
+# exit 0 — 33 passed
+
+python scripts/verify_rm0_gate.py
+# exit 0 — raw=45, gold.dim_sku=27, health=healthy, VA-12 no decision tables
+
+cd trita/data/dlt && pytest tests/ -q
+# exit 0 — 6 passed, 1 skipped
+
+cd trita/data/dbt && pytest tests/test_dbt_contract.py -q
+# exit 0 — 6 passed
+
+python scripts/run_dbt.py run
+# exit 0 — 18 models PASS
+
+TRITA_RUN_VA05=1 python -m pytest trita/data/dbt/tests/test_va05_yoga_bar.py -q
+# exit 0 — 1 passed (40.3s)
+
+cd trita/data/orchestration
+python -m pytest tests/test_daily_shell_defs.py -q
+# exit 0 — 3 passed
+
+TRITA_RUN_VA09=1 python -m pytest trita/data/orchestration/tests/test_va09_integration.py -q
+# exit 0 — 1 passed (27.7s)
+
+cd trita && pnpm --filter @trita/web build
+# exit 0
+
+git grep … SUPABASE_SERVICE_ROLE_KEY=
+# exit 0 — clean
+
+.\scripts\dev-health.ps1
+# exit 0 — API :8000/health 200, LiteLLM :4000 OK
+```
+
+### 3. VA mapping
+
+| VA / task | Verdict | Evidence | Exit |
+|-----------|---------|----------|------|
+| **VA-01** | **PASS** | Full API + JWT/connect tests | 0 |
+| **VA-02** | **PASS** | RLS + connector/csv migrations (contract) | 0 |
+| **VA-03** | **PASS** | `test_llm_draft.py` | 0 |
+| **VA-05** | **PASS** | dbt contract + run + live Yoga Bar | 0 |
+| **VA-06** | **PASS** | `test_integration_health.py` | 0 |
+| **VA-07** | **PASS** | `test_llm_budget.py` | 0 |
+| **VA-09** | **PASS** | Dagster defs + VA-09 integration | 0 |
+| **VA-11** | **PASS** | `test_env_example.py` + git grep | 0 |
+| **VA-12** | **PASS** | `verify_rm0_gate.py` — no decision tables | 0 |
+| **VA-26** | **PARTIAL** | `test_csv_hub.py` (4); no idempotent replay test / live tally script in BEHAVE | 0 |
+| **T-P0-005** | **PASS** | Blueprint contract; **local** health via `dev-health.ps1` | 0 |
+| **VA-04** | **DEFERRED** | Webhooks | — |
+| **VA-08** | **N/A** | OpenMeter deferred (RM-4+) | — |
+| **VA-10** (Render 7d) | **N/A** | No Render deploy; local `/health` **PASS** | — |
+
+### 4. Overall
+
+**PASS** — Automated suites green for RM-0 gate evidence and shipped RM-1 connectors + CSV hub. **VA-26** live/idempotent replay still manual per Scrutiny notes. MISSION RM-0 item 15 already checked; RM-1 items 16–17 in progress.
+
+**Next:** `F-ID-001` identity; optional `upload_tally_fixture.ps1` + idempotent CSV test for full **VA-26** gate.
+
+---
+
+## Behavioral (automated) — 2026-05-21 (re-run) — PASS
+
+**BEHAVE role** — full stack regression (RM-0 + RM-1 CSV/connectors/UI)  
+**Scrutiny precondition:** **MET** — `Scrutiny Validation — 2026-05-20 — PASS (re-run, no new SHIP)`
+
+### Commands (fresh)
+
+| Command | Exit | Notes |
+|---------|------|-------|
+| `pytest trita/apps/api/tests/ -q` | **0** | 52 passed, 3 skipped |
+| Regression bundle (health, csv, rm1, shopify, llm, adr, render, env) | **0** | 33 passed |
+| `python scripts/verify_rm0_gate.py` | **0** | raw=45, dim_sku=27, health=healthy, VA-12 |
+| `pytest trita/data/dlt/tests/ -q` | **0** | 6 passed, 1 skipped |
+| `pytest trita/data/dbt/tests/test_dbt_contract.py -q` | **0** | 6 passed |
+| `python scripts/run_dbt.py run` | **0** | 18 models |
+| `TRITA_RUN_VA05=1` `test_va05_yoga_bar.py` | **0** | 14.7s |
+| `pytest test_daily_shell_defs.py` | **0** | 3 passed |
+| `TRITA_RUN_VA09=1` `test_va09_integration.py` | **0** | 21.3s |
+| `pnpm --filter @trita/web build` | **0** | |
+| `git grep` service role | **0** | clean |
+| `.\scripts\dev-health.ps1` | **0** | local API + LiteLLM |
+
+### VA summary
+
+| VA | Verdict |
+|----|---------|
+| VA-01, VA-02, VA-03, VA-05, VA-06, VA-07, VA-09, VA-11, VA-12 | **PASS** |
+| **VA-26** | **PARTIAL** — `test_csv_hub.py` only; idempotent replay test still missing |
+| VA-04, VA-08 | **DEFERRED** / **N/A** |
+| VA-10 (Render 7d) | **N/A** — local health **PASS** |
+
+**Overall: PASS** — No regressions vs prior BEHAVE (2026-05-21). RM-1 gate (MISSION 21) still needs **VA-26** live + idempotent test per Scrutiny debt.
 
 ---
