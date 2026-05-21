@@ -121,14 +121,20 @@ TRITA_RUN_VA09=1 python -m pytest trita/data/orchestration/tests/test_va09_integ
 
 ## Suite: deploy_health (VA-10)
 
+**Local (Phase 0 default):**
+
+```powershell
+.\scripts\start-local.ps1
+# other terminal:
+.\scripts\dev-health.ps1
+```
+
 ```bash
 pytest trita/apps/api/tests/test_render_blueprint.py -q
-# Expected: exit 0 — render.yaml contract
-
-# After Render Blueprint apply — set RENDER_HEALTH_URL in .env
-./scripts/check_render_health.sh
-# Expected: exit 0 — {"status":"ok","service":"trita-api"}
+# Blueprint contract only — cloud apply deferred
 ```
+
+**Cloud (when card on file):** set `RENDER_HEALTH_URL` to public API host, then `check_render_health.sh`.
 
 ## Suite: litellm (VA-07 / F-PLAT-003)
 

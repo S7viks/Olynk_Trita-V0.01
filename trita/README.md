@@ -7,7 +7,7 @@ Application code for **Trita V0.0.1** (OLynk). Planning docs live in the repo ro
 | Path | Role |
 |------|------|
 | `apps/web` | Next.js 14 (Vercel) |
-| `apps/api` | FastAPI (Render) |
+| `apps/api` | FastAPI (local dev; Render deferred) |
 | `data/dlt` | dlt ingest taps |
 | `data/dbt` | dbt transforms |
 | `data/orchestration` | Dagster code location (ADR-001) |
@@ -19,16 +19,18 @@ Supabase migrations: `../infra/supabase/migrations/` (repo root).
 
 ## Local dev
 
-```bash
-# From repo root
-cp ../.env.example .env
-# or .env.local — never commit secrets
+**Guide:** [docs/LOCAL-DEV.md](../docs/LOCAL-DEV.md) (no Render/Fly card required).
 
-# Web
-cd trita && pnpm install && pnpm dev:web
+```powershell
+# From repo root (path with spaces — use quotes)
+cd "d:\Olynk_V 0.0.1"
+Copy-Item .env.example .env   # fill Supabase + Shopify keys
+.\scripts\start-local.ps1
+```
 
-# API (Python 3.11+)
-cd trita/apps/api && pip install -e ".[dev]" && uvicorn trita_api.main:app --reload --port 8000
+```powershell
+# Health (API must be running)
+.\scripts\dev-health.ps1
 ```
 
 ## Tests

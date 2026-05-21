@@ -13,7 +13,7 @@
 - **Language/Framework:** Next.js 14 (web), FastAPI (API), Python packages (`ontology`, `decisions`, `causal`)
 - **Database:** Supabase Postgres + Auth + pgvector; RLS on all tenant data
 - **Auth:** Supabase Auth; `tenant_id` from JWT only
-- **Deployment target:** Vercel (web), Render (API), Supabase (data)
+- **Deployment target:** Local dev (Phase 0 default); later Vercel (web), Render/Fly (API), Supabase (data)
 - **Key libraries:** dlt, dbt + dbt-expectations, **Dagster** (ADR-001 Accepted), LiteLLM (Gemini/Groq), OpenMeter, DoWhy
 
 ## Features (ordered by priority)
@@ -26,7 +26,7 @@
 4. [x] `.env.example` (no secrets) — BUILD-ORDER item 4
 5. [x] ADR-001 **Dagster** — status **Accepted** — `T-P0-050`
 6. [x] FastAPI + JWT middleware — `T-P0-004`
-7. [x] Render deploy stable — `T-P0-005` _(blueprint + health; apply Blueprint for live URL)_
+7. [x] API runtime — `T-P0-005` _(local: [docs/LOCAL-DEV.md](docs/LOCAL-DEV.md); Render blueprint deferred — card required)_
 8. [x] dlt raw envelope + Shopify tap — `F-INGEST-SHOPIFY`, `T-P0-010`–`T-P0-011`
 9. [x] Shopify **OAuth** + API sync — `T-P0-011`, `T-P0-013` _(webhooks/HMAC `T-P0-012` deferred; **VA-04** deferred)_
 10. [x] dbt staging + gold shell — `F-GRAPH-SHELL`, `T-P0-020`–`T-P0-021`
@@ -134,4 +134,4 @@ Granular tasks: [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/roadmap/`](docs/roa
 Current Milestone: 1 (RM-0)
 Active Feature: Next auth + Sources shell — `T-P0-040`–`T-P0-042` or OpenMeter `F-PLAT-004`
 Pilot tenant: Yoga Bar
-Last Updated: 2026-05-20 (Render blueprint T-P0-005, LiteLLM F-PLAT-003)
+Last Updated: 2026-05-20 (local-first dev; cloud deploy deferred)

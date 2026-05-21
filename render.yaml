@@ -1,5 +1,6 @@
-# Trita V0.0.1 — Render Blueprint (T-P0-005 / VA-10)
-# Apply from Dashboard after push; fill env vars marked sync: false.
+# Trita V0.0.1 — Render Blueprint (T-P0-005 / VA-10) — DEFERRED
+# Requires payment card (plan: starter). Local dev: docs/LOCAL-DEV.md
+# Apply from Dashboard when ready; fill env vars marked sync: false.
 # Docs: infra/render/README.md
 
 services:

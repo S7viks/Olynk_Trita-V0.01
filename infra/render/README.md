@@ -1,5 +1,8 @@
 # Render deployment (T-P0-005 / VA-10)
 
+> **Deferred:** Render Starter (and Fly.io paid tiers) require a card on file.  
+> **Run locally instead:** [docs/LOCAL-DEV.md](../../docs/LOCAL-DEV.md) — `.\scripts\start-local.ps1`
+
 ## Services
 
 | Service | Blueprint name | Health |

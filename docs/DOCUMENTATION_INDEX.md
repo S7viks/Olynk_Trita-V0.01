@@ -67,6 +67,7 @@ Single hub for humans and Cursor agents. **Authority order:** code + HANDOFF →
 | Pipelines | [pipelines/REGISTRY.md](./pipelines/REGISTRY.md) | P-*.md specs |
 | Launch | [checklists/LAUNCH-GATE.md](./checklists/LAUNCH-GATE.md) | phase-5-launch |
 | Pilot | MISSION § Pilot tenant | Yoga Bar for E2E evidence |
+| **Local dev (Phase 0)** | [LOCAL-DEV.md](./LOCAL-DEV.md) | `scripts/start-local.ps1`, `scripts/dev-health.ps1` |
 
 ---
 
