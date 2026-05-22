@@ -31,4 +31,6 @@ def test_daily_shell_job_op_chain() -> None:
     node_names = {n.name for n in job_def.nodes}
     assert "shopify_sync_op" in node_names
     assert "dbt_run_op" in node_names
+    assert "identity_refresh_op" in node_names
+    assert "metrics_dbt_op" in node_names
     assert "integration_health_op" in node_names

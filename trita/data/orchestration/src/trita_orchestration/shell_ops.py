@@ -48,9 +48,9 @@ def dbt_run_op(shopify_sync: dict[str, Any]) -> dict[str, Any]:
 
 
 @op
-def integration_health_op(dbt_run: dict[str, Any]) -> dict[str, int]:
-    """Verify raw + gold row counts for pilot tenant (VA-09 proof)."""
-    del dbt_run
+def integration_health_op(metrics_dbt: dict[str, Any]) -> dict[str, int]:
+    """Verify raw + gold + feat metrics for pilot tenant (VA-09 / VA-14)."""
+    del metrics_dbt
     load_repo_env()
     tenant_id = pilot_tenant_id()
     url = os.environ.get("DATABASE_URL", "").strip()
@@ -87,4 +87,64 @@ def integration_health_op(dbt_run: dict[str, Any]) -> dict[str, int]:
         detail={"raw_events": raw_count, "gold_dim_sku": dim_sku_count},
     )
 
-    return {"raw_events": raw_count, "gold_dim_sku": dim_sku_count}
+    metrics_count = 0
+    with psycopg.connect(url, connect_timeout=30) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT count(*) FROM feat.sku_metrics_daily WHERE tenant_id = %s
+                """,
+                (str(tenant_id),),
+            )
+            metrics_count = int(cur.fetchone()[0])
+
+    if metrics_count <= 0:
+        raise Failure(
+            description=f"feat.sku_metrics_daily count is 0 for tenant {tenant_id}"
+        )
+
+    return {
+        "raw_events": raw_count,
+        "gold_dim_sku": dim_sku_count,
+        "feat_sku_metrics_daily": metrics_count,
+    }
+
+
+@op
+def identity_refresh_op(dbt_run: dict[str, Any]) -> dict[str, Any]:
+    """Refresh sku_alias + order_bridge after gold marts (F-ID-001/002)."""
+    del dbt_run
+    load_repo_env()
+    tenant_id = pilot_tenant_id()
+    url = os.environ.get("DATABASE_URL", "").strip()
+    if not url:
+        raise Failure(description="DATABASE_URL not set")
+    try:
+        from trita_ontology.refresh import refresh_identity
+    except ImportError as exc:
+        raise Failure(description=f"trita-ontology not installed: {exc}") from exc
+
+    with psycopg.connect(url, autocommit=True) as conn:
+        result = refresh_identity(conn, tenant_id)
+    return result
+
+
+@op
+def metrics_dbt_op(identity_refresh: dict[str, Any]) -> dict[str, Any]:
+    """Build feat.sku_metrics_daily after identity refresh (P-METRICS-DAILY)."""
+    del identity_refresh
+    load_repo_env()
+    if not RUN_DBT.is_file():
+        raise Failure(description=f"run_dbt script missing: {RUN_DBT}")
+    started = time.perf_counter()
+    proc = subprocess.run(
+        [sys.executable, str(RUN_DBT), "run", "--select", "sku_metrics_daily"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    elapsed = time.perf_counter() - started
+    if proc.returncode != 0:
+        tail = (proc.stderr or proc.stdout or "")[-2000:]
+        raise Failure(description=f"dbt metrics run failed: {tail}")
+    return {"exit_code": 0, "dbt_seconds": elapsed}

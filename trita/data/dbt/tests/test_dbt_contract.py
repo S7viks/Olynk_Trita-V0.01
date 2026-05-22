@@ -31,6 +31,16 @@ def test_gold_shell_models_present() -> None:
     assert (gold / "fact_inventory_daily.sql").is_file()
 
 
+def test_feat_metrics_model_present() -> None:
+    feat = MODELS / "feat"
+    sql = (feat / "sku_metrics_daily.sql").read_text(encoding="utf-8")
+    assert (feat / "sku_metrics_daily.sql").is_file()
+    assert "velocity_7d" in sql
+    assert "stockout_risk" in sql
+    assert "capital_at_risk" in sql
+    assert "dead_stock" in sql
+
+
 def test_quarantine_model_present() -> None:
     assert (MODELS / "quarantine" / "shopify_invalid.sql").is_file()
 

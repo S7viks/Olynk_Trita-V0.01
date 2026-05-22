@@ -1,0 +1,20 @@
+[
+  {
+    "id": "setl_900001",
+    "entity_id": "pay_900001",
+    "channel_order_id": "YB-SHOPIFY-1001",
+    "amount": 249900,
+    "currency": "INR",
+    "status": "processed",
+    "created_at": 1716105600
+  },
+  {
+    "id": "setl_900002",
+    "entity_id": "pay_900002",
+    "channel_order_id": "YB-SHOPIFY-1002",
+    "amount": 129900,
+    "currency": "INR",
+    "status": "processed",
+    "created_at": 1716192000
+  }
+]

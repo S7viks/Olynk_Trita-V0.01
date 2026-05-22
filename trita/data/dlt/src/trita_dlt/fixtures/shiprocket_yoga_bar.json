@@ -1,0 +1,18 @@
+[
+  {
+    "id": 900001,
+    "order_id": "SR-900001",
+    "channel_order_id": "YB-SHOPIFY-1001",
+    "status": "DELIVERED",
+    "awb": "SRAWB900001",
+    "created_at": "2026-05-18T08:00:00Z"
+  },
+  {
+    "id": 900002,
+    "order_id": "SR-900002",
+    "channel_order_id": "YB-SHOPIFY-1002",
+    "status": "IN_TRANSIT",
+    "awb": "SRAWB900002",
+    "created_at": "2026-05-19T14:30:00Z"
+  }
+]

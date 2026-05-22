@@ -50,8 +50,12 @@ export function SourcesHealthTable({
       <tbody>
         {integrations.map((row) => (
           <tr key={row.source} style={{ borderBottom: "1px solid var(--border)" }}>
-            <td style={{ padding: "0.75rem 1rem", textTransform: "capitalize" }}>
-              {row.source}
+            <td style={{ padding: "0.75rem 1rem" }}>
+              <span style={{ fontWeight: 600 }}>
+                {(row as IntegrationHealth & { display_name?: string }).display_name ??
+                  row.source}
+              </span>
+              <ConnectorTier mode={(row as IntegrationHealth & { mode?: string }).mode} />
             </td>
             <td style={{ padding: "0.75rem 1rem" }}>
               <span
@@ -83,7 +87,17 @@ export function SourcesHealthTable({
                     : ""}
                 </span>
               ) : null}
-              {!row.detail?.shop_domain && !row.detail?.message ? (
+              {row.detail?.valid_count != null ? (
+                <span style={{ display: "block", color: "var(--muted)" }}>
+                  {String(row.detail.valid_count)} valid
+                  {row.detail.quarantine_count != null
+                    ? `, ${String(row.detail.quarantine_count)} quarantined`
+                    : ""}
+                </span>
+              ) : null}
+              {!row.detail?.shop_domain &&
+              !row.detail?.message &&
+              row.detail?.valid_count == null ? (
                 <span style={{ color: "var(--muted)" }}>—</span>
               ) : null}
             </td>
@@ -91,5 +105,38 @@ export function SourcesHealthTable({
         ))}
       </tbody>
     </table>
+  );
+}
+
+function ConnectorTier({ mode }: { mode?: string }) {
+  if (mode === "csv_hub") {
+    return (
+      <span
+        style={{
+          marginLeft: "0.5rem",
+          fontSize: "0.7rem",
+          padding: "0.1rem 0.35rem",
+          borderRadius: 4,
+          border: "1px solid var(--accent)",
+          color: "var(--accent)",
+        }}
+      >
+        CSV hub
+      </span>
+    );
+  }
+  return (
+    <span
+      style={{
+        marginLeft: "0.5rem",
+        fontSize: "0.7rem",
+        padding: "0.1rem 0.35rem",
+        borderRadius: 4,
+        border: "1px solid var(--healthy)",
+        color: "var(--healthy)",
+      }}
+    >
+      Production
+    </span>
   );
 }

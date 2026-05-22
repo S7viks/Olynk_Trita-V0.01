@@ -14,6 +14,7 @@ clean-targets:
 
 vars:
   yoga_bar_tenant_id: "{{ env_var('YOGA_BAR_TENANT_ID', '00000000-0000-0000-0000-000000000000') }}"
+  lead_time_days: 14
 
 models:
   trita:
@@ -26,3 +27,6 @@ models:
     quarantine:
       +schema: quarantine
       +materialized: view
+    feat:
+      +schema: feat
+      +materialized: table

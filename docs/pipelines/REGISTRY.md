@@ -35,10 +35,10 @@ Orchestrator: **Dagster** (ADR-001 Accepted). All jobs must be **idempotent** by
 
 ## Analytics & decisions
 
-| ID | Schedule | Phase | Input | Output |
-|----|----------|-------|-------|--------|
-| P-METRICS-INTRADAY | 4h | 1 | gold inventory, orders | `feat.sku_metrics_daily` |
-| P-METRICS-DAILY | nightly | 1 | gold | metrics + flags |
+| ID | Schedule | Phase | Status | Input | Output |
+|----|----------|-------|--------|-------|--------|
+| P-METRICS-INTRADAY | 4h | 1 | planned | gold inventory, orders | `feat.sku_metrics_daily` |
+| P-METRICS-DAILY | nightly | 1 | **active** | gold + identity | `feat.sku_metrics_daily` (Dagster `metrics_dbt_op`) |
 | P-FEAT-MATRIX-WEEKLY | weekly | 3 | gold + ads + logistics | `feat.sku_week_matrix` |
 | P-CAUSAL-ASSOC | weekly | 3 | matrix | association edges |
 | P-CAUSAL-DOWHY | weekly | 3 | candidates | L2/L3 edges | [P-CAUSAL-DOWHY.md](./P-CAUSAL-DOWHY.md) |

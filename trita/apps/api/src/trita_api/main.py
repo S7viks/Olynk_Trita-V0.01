@@ -3,6 +3,10 @@ from fastapi import FastAPI
 import os
 
 from trita_api.routes.auth import router as auth_router
+from trita_api.routes.csv import router as csv_router
+from trita_api.routes.identity import router as identity_router
+from trita_api.routes.metrics import router as metrics_router
+from trita_api.routes.reports import router as reports_router
 from trita_api.routes.dev_auth import router as dev_auth_router
 from trita_api.routes.dev_shopify import router as dev_shopify_router
 from trita_api.routes.integrations import router as integrations_router
@@ -20,6 +24,10 @@ app = FastAPI(
 app.include_router(auth_router)
 app.include_router(tenant_router)
 app.include_router(integrations_router)
+app.include_router(csv_router)
+app.include_router(identity_router)
+app.include_router(metrics_router)
+app.include_router(reports_router)
 app.include_router(llm_router)
 # Shopify before generic /v1/sources/{source}/* so POST .../shopify/sync is not shadowed
 app.include_router(shopify_router)

@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: sku_metrics_daily
+    description: Deterministic SKU × day metrics (velocity, cover, aging, flags)
+    columns:
+      - name: tenant_id
+        tests:
+          - not_null
+      - name: canonical_sku_id
+        tests:
+          - not_null
+      - name: metrics_daily_key
+        tests:
+          - not_null
+          - unique
+      - name: velocity_7d
+        tests:
+          - not_null
+      - name: stockout_risk
+        tests:
+          - not_null
+      - name: dead_stock
+        tests:
+          - not_null
+      - name: cogs_missing
+        tests:
+          - not_null

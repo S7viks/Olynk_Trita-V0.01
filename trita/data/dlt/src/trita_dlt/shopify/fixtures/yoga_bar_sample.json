@@ -6,7 +6,15 @@
       "name": "#YB-1001",
       "updated_at": "2026-05-19T10:00:00Z",
       "line_items": [
-        { "variant_id": 101, "sku": "YB-GRANOLA-1KG", "quantity": 2 }
+        { "id": 90001, "variant_id": 101, "sku": "YB-GRANOLA-1KG", "quantity": 2, "price": "499.00" }
+      ]
+    },
+    {
+      "id": 5001002,
+      "name": "#YB-1002",
+      "updated_at": "2026-05-19T14:30:00Z",
+      "line_items": [
+        { "id": 90002, "variant_id": 102, "sku": "YB-MUESLI-400", "quantity": 1, "price": "299.00" }
       ]
     }
   ],

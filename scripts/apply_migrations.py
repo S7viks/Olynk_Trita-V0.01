@@ -17,6 +17,11 @@ MIGRATION_ORDER = [
     "20260520200000_raw_shopify_events.sql",
     "20260520300000_connector_credentials.sql",
     "20260520400000_graph_schemas.sql",
+    "20260520500000_integration_health.sql",
+    "20260520600000_connector_raw_rm1.sql",
+    "20260520700000_csv_hub.sql",
+    "20260520800000_identity_v1.sql",
+    "20260520900000_feat_schema.sql",
 ]
 
 

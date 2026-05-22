@@ -7,11 +7,11 @@ sources:
     tables:
       - name: shopify_events
         description: Shopify orders, inventory, products (JSON payload)
-        columns:
-          - name: tenant_id
-          - name: source
-          - name: external_id
-          - name: entity_type
-          - name: payload
-          - name: ingested_at
-          - name: lineage
+      - name: unicommerce_events
+        description: Unicommerce inventory snapshots
+      - name: shiprocket_events
+        description: Shiprocket shipments
+      - name: razorpay_events
+        description: Razorpay settlements
+      - name: csv_hub_events
+        description: CSV hub canonical rows (tally, generic, …)

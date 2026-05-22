@@ -12,3 +12,5 @@ __pycache__/
 venv/
 *.egg-info/
 .DS_Store
+trita/data/dbt/target/
+trita/data/dbt/logs/

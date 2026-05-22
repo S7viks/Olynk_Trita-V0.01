@@ -24,16 +24,17 @@ def test_integrations_health_shopify_disconnected(tenant_a_id: UUID) -> None:
     token = mint_test_token(tenant_id=tenant_a_id)
     with patch("trita_api.routes.integrations.list_integration_health", return_value=[]):
         with patch("trita_api.routes.integrations.get_shopify_credential", return_value=None):
-            response = client.get(
-                "/v1/integrations/health",
-                headers={"Authorization": f"Bearer {token}"},
-            )
+            with patch("trita_api.routes.integrations.get_connector_credential", return_value=None):
+                response = client.get(
+                    "/v1/integrations/health",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
     assert response.status_code == 200
     body = response.json()
     assert body["tenant_id"] == str(tenant_a_id)
     integrations = body["integrations"]
-    assert len(integrations) == 1
-    shopify = integrations[0]
+    assert len(integrations) == 5
+    shopify = next(i for i in integrations if i["source"] == "shopify")
     assert shopify["source"] == "shopify"
     assert shopify["status"] == "disconnected"
     assert shopify["last_sync_at"] is None
@@ -53,12 +54,13 @@ def test_integrations_health_shopify_healthy_row(tenant_a_id: UUID) -> None:
     )
     with patch("trita_api.routes.integrations.list_integration_health", return_value=[row]):
         with patch("trita_api.routes.integrations.get_shopify_credential", return_value=None):
-            response = client.get(
-                "/v1/integrations/health",
-                headers={"Authorization": f"Bearer {token}"},
-            )
+            with patch("trita_api.routes.integrations.get_connector_credential", return_value=None):
+                response = client.get(
+                    "/v1/integrations/health",
+                    headers={"Authorization": f"Bearer {token}"},
+                )
     assert response.status_code == 200
-    shopify = response.json()["integrations"][0]
+    shopify = next(i for i in response.json()["integrations"] if i["source"] == "shopify")
     assert shopify["status"] == "healthy"
     assert shopify["last_sync_at"] is not None
 
@@ -80,9 +82,10 @@ def test_integrations_health_tenant_isolation(tenant_b_id: UUID) -> None:
 
     with patch("trita_api.routes.integrations.list_integration_health", side_effect=_list):
         with patch("trita_api.routes.integrations.get_shopify_credential", return_value=None):
-            response = client.get(
-                "/v1/integrations/health",
-                headers={"Authorization": f"Bearer {token_b}"},
-            )
+            with patch("trita_api.routes.integrations.get_connector_credential", return_value=None):
+                response = client.get(
+                    "/v1/integrations/health",
+                    headers={"Authorization": f"Bearer {token_b}"},
+                )
     assert response.status_code == 200
     assert response.json()["tenant_id"] == str(tenant_b_id)

@@ -26,7 +26,7 @@
 
 ### Process / debt (not blocking RM-1 GO)
 
-- **Git:** RM-1 implementation largely **uncommitted** on `main` (ahead 5); RETRO doc sweep commit separate from bulk SHIP commit — Worker should land code + tests before next merge
+- **Git:** RM-1 implementation landed on `main` (feat commit + gate scripts); push to `origin/main` before RM-2 SHIP on other machines
 - **T-P0-003** `service_role` path audit — open
 - **VA-04** webhooks, **VA-08** OpenMeter, **VA-10** Render 7d — deferred (documented)
 - **VA-14** UI↔gold browser parity — not automated; API + `verify_metrics_gate.py` sufficient for RM-1

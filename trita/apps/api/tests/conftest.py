@@ -14,6 +14,10 @@ DLT_SRC = Path(__file__).resolve().parents[3] / "data" / "dlt" / "src"
 if str(DLT_SRC) not in sys.path:
     sys.path.insert(0, str(DLT_SRC))
 
+ONTOLOGY_SRC = Path(__file__).resolve().parents[3] / "packages" / "ontology" / "src"
+if str(ONTOLOGY_SRC) not in sys.path:
+    sys.path.insert(0, str(ONTOLOGY_SRC))
+
 
 @pytest.fixture(autouse=True)
 def _env(monkeypatch: pytest.MonkeyPatch) -> None:

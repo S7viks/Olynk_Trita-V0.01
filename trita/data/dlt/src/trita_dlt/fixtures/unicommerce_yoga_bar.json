@@ -1,0 +1,14 @@
+[
+  {
+    "sku_code": "YB-PROTEIN-1KG",
+    "facility": "BOM-01",
+    "available_qty": 420,
+    "updated_at": "2026-05-20T10:00:00Z"
+  },
+  {
+    "sku_code": "YB-MUESLI-400",
+    "facility": "BOM-01",
+    "available_qty": 180,
+    "updated_at": "2026-05-20T10:00:00Z"
+  }
+]

@@ -18,6 +18,15 @@ def database_url() -> str:
 
 
 @dataclass(frozen=True)
+class ConnectorCredential:
+    tenant_id: UUID
+    source: str
+    account_ref: str | None
+    access_token: str
+    scopes: str | None
+
+
+@dataclass(frozen=True)
 class ShopifyCredential:
     tenant_id: UUID
     shop_domain: str
@@ -76,6 +85,57 @@ def get_primary_membership(user_id: UUID) -> TenantMembership | None:
         return None
     tenant_id, role, slug = row
     return TenantMembership(tenant_id=tenant_id, role=role, tenant_slug=slug)
+
+
+def upsert_connector_credential(
+    *,
+    tenant_id: UUID,
+    source: str,
+    access_token_encrypted: str,
+    account_ref: str | None = None,
+    scopes: str | None = None,
+) -> None:
+    with psycopg.connect(database_url(), autocommit=True) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO public.connector_credentials (
+                    tenant_id, source, shop_domain, access_token_encrypted, scopes, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, now())
+                ON CONFLICT (tenant_id, source) DO UPDATE SET
+                    shop_domain = EXCLUDED.shop_domain,
+                    access_token_encrypted = EXCLUDED.access_token_encrypted,
+                    scopes = EXCLUDED.scopes,
+                    updated_at = now()
+                """,
+                (tenant_id, source, account_ref, access_token_encrypted, scopes),
+            )
+
+
+def get_connector_credential(tenant_id: UUID, source: str) -> ConnectorCredential | None:
+    from trita_api.crypto import decrypt_token
+
+    with psycopg.connect(database_url(), connect_timeout=15) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT shop_domain, access_token_encrypted, scopes
+                FROM public.connector_credentials
+                WHERE tenant_id = %s AND source = %s
+                """,
+                (tenant_id, source),
+            )
+            row = cur.fetchone()
+    if not row:
+        return None
+    account_ref, encrypted, scopes = row
+    return ConnectorCredential(
+        tenant_id=tenant_id,
+        source=source,
+        account_ref=account_ref,
+        access_token=decrypt_token(encrypted),
+        scopes=scopes,
+    )
 
 
 def get_shopify_credential(tenant_id: UUID) -> ShopifyCredential | None:
