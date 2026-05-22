@@ -58,4 +58,4 @@ Product ready when [docs/checklists/LAUNCH-GATE.md](docs/checklists/LAUNCH-GATE.
 - **Worker:** read MISSION + VALIDATION + phase doc; PLAN is context only
 - **REANCHOR:** compare PLAN phase claims vs HANDOFF/code
 
-**Last updated:** 2026-05-21 (RM-0 closed; RM-1 six apps + CSV hub)
+**Last updated:** 2026-05-22 (RM-1 closed — six apps + graph + metrics + Data Health; RM-2 Decision Inbox active)

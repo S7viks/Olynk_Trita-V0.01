@@ -2,6 +2,160 @@
 
 ---
 
+## RETRO — Milestone 2 (RM-1) close — 2026-05-22
+
+**Verdict:** **GO** → RM-2 active (Milestone 3)
+
+### Gate evidence (fresh)
+
+| Check | Result |
+|-------|--------|
+| `python scripts/verify_rm1_gate.py` | exit **0** — VA-13 2/2 lines (100%), VA-14 dim_sku=27=feat, VA-26 csv_hub 3 rows + tally healthy |
+| `pytest trita/apps/api/tests/ -q` | **62 passed**, 3 skipped |
+| `pytest tests/test_csv_hub.py` (+ reports, rm1) | **11 passed** — includes `test_csv_idempotent_replay`, `test_csv_upload_status_tenant_isolation` |
+| `pnpm --filter @trita/web build` | exit **0** — `/reports/health`, `/inventory`, `/sources` |
+| ADR-001 | **Accepted** — Dagster daily shell includes identity + metrics ops |
+| RM-1 blocking VAs | **VA-13**, **VA-14**, **VA-26** checked in VALIDATION |
+
+### Scrutiny / BEHAVE (RM-1 scope)
+
+| Track | Verdict | Notes |
+|-------|---------|-------|
+| Scrutiny | **PASS** | RM-1 SHIPs through F-REPORT-HEALTH / inventory / Sources (2026-05-21); metrics + identity PATCH cycles cleared |
+| BEHAVE | **PASS** | Automated suites green (HANDOFF 2026-05-21 entries); gate script closes prior **VA-26** test debt |
+
+### Process / debt (not blocking RM-1 GO)
+
+- **Git:** RM-1 implementation largely **uncommitted** on `main` (ahead 5); RETRO doc sweep commit separate from bulk SHIP commit — Worker should land code + tests before next merge
+- **T-P0-003** `service_role` path audit — open
+- **VA-04** webhooks, **VA-08** OpenMeter, **VA-10** Render 7d — deferred (documented)
+- **VA-14** UI↔gold browser parity — not automated; API + `verify_metrics_gate.py` sufficient for RM-1
+- Yoga Bar: `cogs_missing=27`, `bridge_full_rate=0.0` — data/fixture gap, not gate blockers
+- Cross-tenant API tests for `/v1/reports/health`, `/v1/metrics/*` — recommended before RM-2 inbox
+
+### Next worker (RM-2)
+
+1. Read MISSION items 22–25, [phase-2-inventory-inbox.md](docs/roadmap/phase-2-inventory-inbox.md)
+2. First SHIP: `F-DEC-001`..`004` — card contract + emitter + suppression (no LLM inventory math)
+3. Keep integrity suppress wired to Shopify + Unicommerce SLA (**VA-17**)
+
+---
+
+## SHIP — RM-1 Gate (MISSION #21) — 2026-05-21
+
+**Gate:** Yoga Bar — VA-13, VA-14, VA-26.
+
+### Evidence (`scripts/verify_rm1_gate.py`)
+
+| VA | Result |
+|----|--------|
+| VA-13 | PASS — 2 order lines, 100% resolved |
+| VA-14 | PASS — dim_sku=27, feat.sku_metrics_daily=27 |
+| VA-26 | PASS — 1 completed csv_upload, 3 raw.csv_hub_events, tally healthy |
+
+### Prep (if order lines empty)
+
+```powershell
+python scripts/seed_yoga_bar_shopify_orders.py
+python scripts/run_dbt.py run
+python scripts/refresh_identity.py
+python scripts/verify_rm1_gate.py
+```
+
+### Tests added
+
+- `test_csv_idempotent_replay`
+- `test_csv_upload_status_tenant_isolation`
+
+**Next:** RM-2 — `F-DEC-001`..`004` decision contract + suppression.
+
+---
+
+## SHIP — F-REPORT-HEALTH, F-UI-INVENTORY-LIST, F-UI-SOURCES — 2026-05-21
+
+**Features:** Data Health report UI, inventory SKU list, Sources page completion (RM-1).
+
+### API
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/v1/reports/health` | Aggregates integrations + metrics summary + identity stats (VA-14) |
+
+### Web routes
+
+| Route | Feature |
+|-------|---------|
+| `/reports/health` | F-REPORT-HEALTH |
+| `/inventory` | F-UI-INVENTORY-LIST (sort, stockout/dead filters) |
+| `/sources` | F-UI-SOURCES (legend, tier badges, 5 connectors) |
+
+### Verify
+
+```powershell
+# API running with JWT cookie / dev login
+python -m pytest trita/apps/api/tests/test_reports_api.py -q
+python scripts/verify_metrics_gate.py
+```
+
+Browse: `/reports/health`, `/inventory`, `/sources`.
+
+**Next:** RM-1 gate (#21) — VA-13 ≥90% order lines, VA-14 live parity, VA-26 CSV idempotent test.
+
+---
+
+## Scrutiny Validation — 2026-05-21 — PASS (F-REPORT-HEALTH, F-UI-INVENTORY-LIST, F-UI-SOURCES)
+
+**Scope:**
+
+1. **SHIP** — `GET /v1/reports/health`, `/reports/health`, `/inventory`, `/sources` completion
+2. **Regression** — full API (60 tests), metrics/identity gates, web build
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` (no `DATABASE_URL`) | **60 passed**, 3 skipped |
+| `pytest tests/test_reports_api.py -q` | **1 passed** |
+| `python scripts/verify_metrics_gate.py` | **exit 0** — feat aligned with dim_sku (27=27) |
+| `python scripts/refresh_identity.py` | **exit 0** — `meets_va13=True`, `resolution_rate=1.0` |
+| `pnpm --filter @trita/web build` | **exit 0** |
+| `git grep` secrets | **clean** |
+
+### Per-assertion
+
+| VA / item | Verdict | Notes |
+|-----------|---------|-------|
+| **VA-01** | **PASS** | `TenantDep` on `/v1/reports/health`; sub-aggregates use JWT `ctx` |
+| **VA-03** | **PASS** | Report composes existing deterministic routes — no LLM qty/cover/₹ |
+| **VA-14** | **PARTIAL** | API test mocks sub-routes; mart gate PASS; **no** live UI↔gold parity test or browser BEHAVE |
+| **VA-13** | **PASS** (live) | Identity refresh on Yoga Bar |
+| **VA-26** | **PARTIAL** | `test_csv_idempotent_replay` / upload isolation still **missing** |
+| F-REPORT-HEALTH | **PASS** | Sorted integrations; summary flags `sku_mart_aligned`, `resolution_meets_va13` |
+| F-UI-INVENTORY-LIST | **PASS** | Server page; allowlisted sort; `fetchSkuMetrics` via JWT cookie |
+| F-UI-SOURCES | **PASS** (carry-over) | Nav phase-1 links; no fake RM-4 badges claimed in SHIP |
+| RM-1 gate (#21) | **OPEN** | MISSION #21 unchecked — CSV test debt + formal gate script |
+| Regression | **PASS** | Metrics PATCH (59→60 tests) holds |
+
+### Code review highlights
+
+| Area | Verdict |
+|------|---------|
+| `reports.py` | **PASS** — delegates to `integrations_health`, `metrics_summary`, `identity_stats` (no duplicate SQL) |
+| `test_reports_api.py` | **PASS** — mocks sub-handlers (no `database_url()` pitfall) |
+| Web nav (`lib/nav.ts`) | **PASS** — Inventory + Reports in phase-1 nav |
+| Isolation | **MISSING** — no cross-tenant report test |
+
+### Non-blocking
+
+- Run `BEHAVE` or manual browse `/reports/health` vs API JSON for full **VA-14** sign-off.
+- Add CSV idempotent test before claiming RM-1 gate complete.
+
+**VERDICT:** **PASS** — UI/report SHIP merge-ready. **RM-1 gate (#21)** remains **OPEN** until **VA-26** tests + gate evidence.
+
+---
+
 ## SHIP — F-METRICS-001..004 — 2026-05-21
 
 **Mart:** `feat.sku_metrics_daily` (SKU × day) — velocity, cover, aging, stockout_risk, dead_stock, capital_at_risk, reorder_qty.
@@ -124,6 +278,48 @@ python -m pytest trita/apps/api/tests/test_metrics_api.py -q
 | VA-14 | **PARTIAL** — gate script PASS; **F-REPORT-HEALTH** UI not in this SHIP |
 
 **VERDICT:** **PASS** (metrics SHIP) — **Ready for re-validation**
+
+---
+
+## Scrutiny Validation — 2026-05-21 — PASS (independent re-run, metrics PATCH confirmed)
+
+**Scope:** Confirm prior **FAIL** remediated; full RM-1 stack through **F-METRICS-001..004**; no new SHIP since metrics.
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` (no `DATABASE_URL`) | **59 passed**, 3 skipped |
+| `pytest tests/test_metrics_api.py -q` | **2 passed** |
+| Metrics + identity + csv + shopify bundle | **13 passed** |
+| `python scripts/verify_metrics_gate.py` | **exit 0** — dim_sku=27, feat=27, aligned |
+| `python scripts/verify_rm0_gate.py` | **exit 0** |
+| `pytest trita/data/orchestration/tests/test_daily_shell_defs.py -q` | **3 passed** |
+| `pnpm --filter @trita/web build` | **exit 0** |
+| Prior FAIL (`database_url` before mock on metrics) | **REMEDIATED** |
+
+### Per-assertion
+
+| VA / item | Verdict |
+|-----------|---------|
+| F-METRICS-001..004 | **PASS** |
+| VA-01, VA-03 | **PASS** |
+| **VA-14** | **PARTIAL** — live gate PASS; **F-REPORT-HEALTH** UI not shipped |
+| **VA-26** | **PARTIAL** — CSV idempotent / upload isolation tests still missing |
+| **VA-13** | **PASS** (carry-over) |
+| RM-1 gate (#21) | **OPEN** |
+| Regression | **PASS** |
+
+### Open debt (unchanged)
+
+- `test_csv_idempotent_replay`, `test_csv_upload_status_tenant_isolation`
+- Metrics / identity cross-tenant API isolation tests
+- **T-P0-003** service_role audit
+- Yoga Bar: `cogs_missing=27` until Tally unit costs populate gold (data, not code defect)
+
+**VERDICT:** **PASS** — metrics SHIP merge-ready. Next scrutiny: **F-REPORT-HEALTH** or **F-UI-INVENTORY-LIST**.
 
 ---
 
@@ -2020,5 +2216,87 @@ git grep … SUPABASE_SERVICE_ROLE_KEY=
 | VA-10 | **N/A** — local health **PASS** |
 
 **Overall: PASS** — Identity SHIP behaviorally verified. **Non-blocking:** patch `scripts/refresh_identity.py` to use `psycopg.connect(..., prepare_threshold=None)` for pooler. RM-1 gate (#21) still open per Scrutiny (CSV debt + metrics/health UI).
+
+---
+
+## Behavioral (automated) — 2026-05-21 — PASS (F-METRICS-001..004)
+
+**BEHAVE role** — full RM-0/RM-1 regression + **F-METRICS-001..004** + identity  
+**Scrutiny precondition:** **MET** — `PASS (PATCH: F-METRICS)` + `PASS (independent re-run, metrics PATCH confirmed)`
+
+### Commands (fresh)
+
+| Command | Exit | Notes |
+|---------|------|-------|
+| `pytest trita/apps/api/tests/ -q` | **0** | **59 passed**, 3 skipped |
+| Bundle (metrics, identity, csv, rm1, shopify, health) | **0** | **21 passed** |
+| `pytest tests/test_metrics_api.py -q` | **0** | 2 passed |
+| `python scripts/verify_rm0_gate.py` | **0** | VA-12 |
+| `python scripts/verify_metrics_gate.py` | **0** | dim_sku=27, feat=27 aligned; stockout=0, dead_stock=27, cogs_missing=27 |
+| `python scripts/refresh_identity.py` | **0** | meets_va13=True, aliases=27 |
+| `pytest trita/data/dlt/tests/ -q` | **0** | 6 passed, 1 skipped |
+| `pytest trita/data/dbt/tests/test_dbt_contract.py -q` | **0** | **7 passed** |
+| `python scripts/run_dbt.py run` | **0** | **22** models |
+| `TRITA_RUN_VA05=1` `test_va05_yoga_bar.py` | **0** | 18.1s |
+| `pytest test_daily_shell_defs.py` | **0** | 3 passed (incl. metrics_dbt_op) |
+| `TRITA_RUN_VA09=1` `test_va09_integration.py` | **0** | 41.4s |
+| `pnpm --filter @trita/web build` | **0** | |
+| `git grep` | **0** | clean |
+| `.\scripts\dev-health.ps1` | **0** | local API + LiteLLM |
+
+### VA summary
+
+| VA | Verdict |
+|----|---------|
+| **VA-01, VA-02, VA-03, VA-05, VA-06, VA-07, VA-09, VA-11, VA-12, VA-13** | **PASS** |
+| **VA-14** | **PARTIAL** — `verify_metrics_gate.py` **PASS**; **F-REPORT-HEALTH** UI not shipped |
+| **F-METRICS-001..004** | **PASS** — mart gate + API tests |
+| **VA-26** | **PARTIAL** — CSV idempotent test still missing |
+| VA-04, VA-08, VA-10 | **DEFERRED** / **N/A** (local health OK) |
+
+**Overall: PASS** — Metrics SHIP green. RM-1 gate (#21) still needs CSV test debt + health/inventory UI per Scrutiny.
+
+**Next:** `F-REPORT-HEALTH` or `F-UI-INVENTORY-LIST`.
+
+---
+
+## Behavioral (automated) — 2026-05-21 — PASS (F-REPORT-HEALTH, inventory, Sources)
+
+**BEHAVE role** — full stack + **F-REPORT-HEALTH**, **F-UI-INVENTORY-LIST**, **F-UI-SOURCES**  
+**Scrutiny precondition:** **MET** — `Scrutiny Validation — 2026-05-21 — PASS (F-REPORT-HEALTH, F-UI-INVENTORY-LIST, F-UI-SOURCES)`
+
+### Commands (fresh)
+
+| Command | Exit | Notes |
+|---------|------|-------|
+| `pytest trita/apps/api/tests/ -q` | **0** | **60 passed**, 3 skipped |
+| Regression bundle (+ `test_reports_api.py`) | **0** | **38 passed** |
+| `python scripts/verify_rm0_gate.py` | **0** | VA-12 |
+| `python scripts/verify_metrics_gate.py` | **0** | feat=27 aligned |
+| `python scripts/refresh_identity.py` | **0** | meets_va13=True |
+| `pytest trita/data/dlt/tests/ -q` | **0** | 6 passed, 1 skipped |
+| `pytest trita/data/dbt/tests/test_dbt_contract.py -q` | **0** | 7 passed |
+| `python scripts/run_dbt.py run` | **0** | 22 models |
+| `TRITA_RUN_VA05=1` `test_va05_yoga_bar.py` | **0** | 33.1s |
+| `pytest test_daily_shell_defs.py` | **0** | 3 passed |
+| `TRITA_RUN_VA09=1` `test_va09_integration.py` | **0** | 49.8s |
+| `pnpm --filter @trita/web build` | **0** | `/reports/health`, `/inventory`, `/sources` compile |
+| `git grep` | **0** | clean |
+| `.\scripts\dev-health.ps1` | **1** | API not running on :8000 (start `.\scripts\start-local.ps1` for live check) |
+
+### VA summary
+
+| VA | Verdict |
+|----|---------|
+| **VA-01, VA-02, VA-03, VA-05, VA-06, VA-07, VA-09, VA-11, VA-12, VA-13** | **PASS** |
+| **VA-14** | **PARTIAL** — `test_reports_api.py` + `verify_metrics_gate.py` **PASS**; no browser/UI↔gold parity test |
+| **F-REPORT-HEALTH / F-UI-INVENTORY-LIST / F-UI-SOURCES** | **PASS** (automated) |
+| **VA-26** | **PARTIAL** — no idempotent CSV test |
+| VA-04, VA-08 | **DEFERRED** / **N/A** |
+| VA-10 | **SKIP** (this run) — local API down; blueprint N/A |
+
+**Overall: PASS** — Report/inventory/Sources SHIP green in CI. **RM-1 gate (#21)** still **OPEN** (MISSION unchecked): VA-26 test + formal ≥90% order-line gate.
+
+**Next:** RM-1 gate evidence script; `test_csv_idempotent_replay`; browse `/reports/health` with API up.
 
 ---

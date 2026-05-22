@@ -21,11 +21,12 @@ Granular program milestones for **Milestone Review** and **VALIDATION.md** gates
 
 **Status (2026-05-21):** Program gate closed — `python scripts/verify_rm0_gate.py` exit 0; MISSION item 15 checked. **VA-10** (Render 7d) and **VA-08** (OpenMeter) remain deferred per VALIDATION.
 
-**RM-1 is active** (RETRO 2026-05-21). RM-0 prerequisites met:
+**RM-1 gate closed (2026-05-21):** `python scripts/verify_rm1_gate.py` exit 0; MISSION item 21 checked. VA-13/14/26 checked in VALIDATION.
 
-1. **RM-0 blocking VAs** checked in [`../VALIDATION.md`](../VALIDATION.md) _(VA-10, VA-04, VA-08 deferred per contract)_.
-2. **ADR-001** **Accepted** (Dagster).
-3. Evidence: `scripts/verify_rm0_gate.py` exit 0; Sources `/sources` Shopify row healthy for Yoga Bar.
+**RM-2 is active.** RM-1 prerequisites met:
+
+1. Six-app graph + CSV hub + metrics + Data Health UI shipped.
+2. Evidence: `scripts/verify_rm1_gate.py`; optional order-line seed via `scripts/seed_yoga_bar_shopify_orders.py` when Shopify API returns no orders.
 
 ---
 

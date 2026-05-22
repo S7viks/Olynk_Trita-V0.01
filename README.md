@@ -21,9 +21,9 @@ This repository is the **ground-up build** workspace. Application code will live
 
 ## Status
 
-**Phase:** RM-1 — six apps + graph (Weeks 3–5)  
-**Monorepo:** `trita/` — Phase 0 spine complete (see [HANDOFF.md](HANDOFF.md) RM-0 gate)  
-**Next action:** [docs/BUILD-ORDER.md](docs/BUILD-ORDER.md) — connectors `F-CONN-002`–`006` or CSV hub `F-CONN-005`
+**Phase:** RM-2 — Decision Inbox + suppression (Weeks 6–8)  
+**Monorepo:** `trita/` — RM-0 + RM-1 complete for Yoga Bar (see [HANDOFF.md](HANDOFF.md) RETRO 2026-05-22)  
+**Next action:** [docs/BUILD-ORDER.md](docs/BUILD-ORDER.md) — `F-DEC-001`..`004` decision contract + emitter
 
 ## Quick copy
 

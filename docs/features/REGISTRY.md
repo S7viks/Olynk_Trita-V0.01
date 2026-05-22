@@ -29,18 +29,18 @@ Track status in the **Status** column: `planned` | `in_progress` | `done` | `def
 | F-CONN-HEALTH | Integration health API | 0 | **done** | F-INGEST-SHOPIFY | `GET /v1/integrations/health`; VA-06 |
 | F-INGEST-SHOPIFY | Shopify ingest | 0 | **done** | OAuth + API→raw; VA-05 gold path; webhooks (VA-04) deferred |
 | F-CONN-001 | Shopify production | 1 | F-INGEST-SHOPIFY | Webhooks + scheduled |
-| F-CONN-002 | Unicommerce | 1 | F-CONN-001 | Inventory in gold |
-| F-CONN-003 | Tally CSV | 1 | F-CONN-005 | Via CSV hub; unit cost on SKU in gold |
-| F-CONN-004 | Shiprocket | 1 | — | Shipments in gold |
-| F-CONN-005 | CSV hub | 1 | F-GRAPH-SHELL | Template or column map → validate → raw → quarantine → gold; [P-INGEST-CSV-HUB](../pipelines/P-INGEST-CSV-HUB.md) |
-| F-CONN-006 | Razorpay | 1 | — | Payouts in gold |
+| F-CONN-002 | Unicommerce | 1 | **done** | F-CONN-001 | API connect/sync; raw + dbt gold inventory union |
+| F-CONN-003 | Tally CSV | 1 | **done** | F-CONN-005 | Via CSV hub upload; `gold.sku_unit_cost` |
+| F-CONN-004 | Shiprocket | 1 | **done** | — | API connect/sync; `gold.fact_shipment` |
+| F-CONN-005 | CSV hub | 1 | **done** | F-GRAPH-SHELL | `POST /v1/csv/upload`; templates + quarantine; [P-INGEST-CSV-HUB](../pipelines/P-INGEST-CSV-HUB.md) |
+| F-CONN-006 | Razorpay | 1 | **done** | — | API connect/sync; `gold.fact_payout` |
 | F-CONN-007 | Delhivery | 3 | — | Logistics in matrix |
 | F-CONN-008 | Meta Ads | 3 | — | Ad spend daily |
 | F-CONN-009 | Google Ads | 3 | F-CONN-008 | Same |
 | F-CONN-010 | Amazon | 4 | F-CONN-005 | CSV via hub (min); beta API ok |
 | F-GA4 | GA4 connector | 4 | — | Sessions in matrix |
-| F-UI-SOURCES | Sources page | 1 | F-CONN-HEALTH | 6 then 10 rows |
-| F-UI-SOURCES-SHELL | Sources shell | 0 | **done** | F-CONN-HEALTH | `/sources` + health table; Shopify only in RM-0 |
+| F-UI-SOURCES | Sources page | 1 | **done** | F-CONN-HEALTH | 5 RM-1 rows, legend, sync CTAs |
+| F-UI-SOURCES-SHELL | Sources shell | 0 | **done** | F-CONN-HEALTH | `/sources` + health table |
 
 Spec: [connect-sources.md](./connect-sources.md)
 
@@ -50,13 +50,13 @@ Spec: [connect-sources.md](./connect-sources.md)
 
 | ID | Name | Phase | Deps | Acceptance criteria |
 |----|------|-------|------|---------------------|
-| F-ID-001 | SKU alias table | 1 | F-CONN-001,002 | ≥90% lines resolve |
-| F-ID-002 | Order payment/shipment bridge | 1 | F-CONN-004,006 | Join rate logged |
+| F-ID-001 | SKU alias table | 1 | **done** | F-CONN-001,002 | `public.sku_alias`; `POST /v1/identity/refresh`; VA-13 |
+| F-ID-002 | Order payment/shipment bridge | 1 | **done** | F-CONN-004,006 | `public.order_bridge`; join rates in `/v1/identity/stats` |
 | F-GRAPH-SHELL | Gold table shell | 0 | **done** | staging + gold.dim_sku, fact_order_line, fact_inventory_daily; quarantine shell |
-| F-METRICS-001 | velocity + cover | 1 | F-ID-001 | Matches spec |
-| F-METRICS-002 | aging + dead_stock | 1 | F-METRICS-001 | Rule tests pass |
-| F-METRICS-003 | stockout_risk | 1 | F-METRICS-001 | lead_time aware |
-| F-METRICS-004 | capital_at_risk | 1 | F-CONN-003 | Block if no COGS |
+| F-METRICS-001 | velocity + cover | 1 | **done** | F-ID-001 | `feat.sku_metrics_daily` velocity_7d/30d, days_of_cover |
+| F-METRICS-002 | aging + dead_stock | 1 | **done** | F-METRICS-001 | aging_days, dead_stock flag |
+| F-METRICS-003 | stockout_risk | 1 | **done** | F-METRICS-001 | lead_time_days var (14d default) |
+| F-METRICS-004 | capital_at_risk | 1 | **done** | F-CONN-003 | null when COGS missing (`cogs_missing`) |
 | F-METRICS-005 | Anomaly z-score | 2 | F-METRICS-001 | Optional signal |
 
 ---
@@ -90,8 +90,8 @@ Spec: [decision-inbox.md](./decision-inbox.md)
 |----|------|-------|------|---------------------|
 | F-UI-NAV | 7-route navigation | 0 | **done** | — | Matches product map |
 | F-UI-FEED | Home proactive feed | 2 | F-INBOX-001 | Today’s cards |
-| F-UI-INVENTORY-LIST | Inventory SKU view | 1 | F-METRICS-001 | Sort aging, cover |
-| F-REPORT-HEALTH | Data health report | 1 | F-CONN-HEALTH | Counts match API |
+| F-UI-INVENTORY-LIST | Inventory SKU view | 1 | **done** | F-METRICS-001 | `/inventory` sort + filters |
+| F-REPORT-HEALTH | Data health report | 1 | **done** | F-CONN-HEALTH | `/reports/health` + `GET /v1/reports/health` |
 | F-REPORT-AGING | SKU aging report | 2 | F-METRICS-002 | ₹ sort |
 | F-REPORT-DEAD | Dead stock report | 2 | F-METRICS-002 | Matches cards |
 | F-REPORT-REORDER | Reorder queue report | 2 | F-METRICS-003 | Matches cards |

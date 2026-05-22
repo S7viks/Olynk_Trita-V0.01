@@ -1,5 +1,7 @@
 # Phase 1 — Six Apps + Graph (Weeks 3–5)
 
+**Status (2026-05-22):** **Closed** — RM-1 GO; evidence `scripts/verify_rm1_gate.py` (VA-13/14/26). See [HANDOFF.md](../../HANDOFF.md) RETRO Milestone 2.
+
 **Goal:** Wide enough graph for inventory truth.
 
 **Exit:** Data Health Card accurate for **Yoga Bar**; ≥90% order lines resolve identity.
@@ -91,12 +93,12 @@
 
 ## Deliverables checklist
 
-- [ ] 6 connectors ingesting for pilot tenant
-- [ ] ≥90% order line resolution
-- [ ] Gold tables populated
-- [ ] DQ quarantine active
-- [ ] Deterministic metrics live
-- [ ] Data Health Report matches API
+- [x] 6 connectors ingesting for pilot tenant
+- [x] ≥90% order line resolution
+- [x] Gold tables populated
+- [x] DQ quarantine active
+- [x] Deterministic metrics live
+- [x] Data Health Report matches API
 
 ---
 

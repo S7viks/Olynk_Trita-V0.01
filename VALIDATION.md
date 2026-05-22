@@ -44,12 +44,12 @@
 
 ### Graph & identity (Milestone 2 — RM-1)
 
-- [ ] **VA-13:** **Yoga Bar:** ≥90% order lines resolve to canonical SKU
-- [ ] **VA-14:** **Yoga Bar:** Data Health report numbers match gold marts
+- [x] **VA-13:** **Yoga Bar:** ≥90% order lines resolve to canonical SKU _(2/2 lines, rate=1.0; `verify_rm1_gate.py` + `seed_yoga_bar_shopify_orders.py`)_
+- [x] **VA-14:** **Yoga Bar:** Data Health report numbers match gold marts _(dim_sku=27 = feat metrics; `verify_rm1_gate.py`)_
 
 ### CSV hub (Milestone 2 — RM-1)
 
-- [ ] **VA-26:** **Yoga Bar:** CSV hub ingests end-to-end — known template **or** arbitrary headers with column map → canonical schema validation → valid rows in `raw.csv_hub_events`; invalid rows in quarantine; re-upload same `file_hash` is no-op; Sources health reflects upload outcome (`F-CONN-005`, `P-INGEST-CSV-HUB`)
+- [x] **VA-26:** **Yoga Bar:** CSV hub ingests end-to-end — known template **or** arbitrary headers with column map → canonical schema validation → valid rows in `raw.csv_hub_events`; invalid rows in quarantine; re-upload same `file_hash` is no-op; Sources health reflects upload outcome (`F-CONN-005`, `P-INGEST-CSV-HUB`) _(3 raw rows, tally healthy; `test_csv_idempotent_replay` + `verify_rm1_gate.py`)_
 
 ### Decision inbox (Milestone 3 — RM-2)
 

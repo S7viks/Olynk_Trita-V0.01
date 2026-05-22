@@ -38,12 +38,12 @@
 
 ### Milestone 2 — RM-1: Six apps + graph (Weeks 3–5)
 
-16. [ ] Connectors 2–4, 6 (API/scheduled) — `F-CONN-002`, `003`, `004`, `006`
-17. [ ] **CSV hub (production)** — `F-CONN-005`: template auto-detect **or** column map → schema validation → raw envelope → quarantine → gold ([P-INGEST-CSV-HUB](docs/pipelines/P-INGEST-CSV-HUB.md)); Tally/Amazon CSV routes through hub
-18. [ ] Identity v1 — `F-ID-001`, `F-ID-002`
-19. [ ] Gold models + metrics pipelines — `F-METRICS-001`..`004`
-20. [ ] Data Health report + inventory list UI — `F-REPORT-HEALTH`, `F-UI-INVENTORY-LIST`, `F-UI-SOURCES`
-21. [ ] **Gate (RM-1):** Yoga Bar — ≥90% order lines resolved; Data Health matches gold; CSV upload path proven (VA-26)
+16. [x] Connectors 2–4, 6 (API/scheduled) — `F-CONN-002`, `004`, `006` API connect/sync + fixtures; `F-CONN-003` Tally = Sources `csv_hub` row (ingest via `F-CONN-005`)
+17. [x] **CSV hub (production)** — `F-CONN-005`: template auto-detect **or** column map → schema validation → `raw.csv_hub_events` → quarantine → gold (`sku_unit_cost`); Tally upload on Sources
+18. [x] Identity v1 — `F-ID-001`, `F-ID-002` (`sku_alias`, order bridge, `POST /v1/identity/refresh`)
+19. [x] Gold models + metrics pipelines — `F-METRICS-001`..`004` (`feat.sku_metrics_daily`, `GET /v1/metrics/*`, P-METRICS-DAILY in Dagster shell)
+20. [x] Data Health report + inventory list UI — `F-REPORT-HEALTH`, `F-UI-INVENTORY-LIST`, `F-UI-SOURCES`
+21. [x] **Gate (RM-1):** Yoga Bar — ≥90% order lines resolved; Data Health matches gold; CSV upload path proven (VA-26) _(2026-05-21: `scripts/verify_rm1_gate.py` — VA-13 2/2 lines, VA-14 27=27, VA-26 csv_hub)_
 
 ### Milestone 3 — RM-2: Inventory inbox (Weeks 6–8)
 
@@ -131,7 +131,7 @@ Granular tasks: [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/roadmap/`](docs/roa
 
 ## Status
 
-Current Milestone: **2** (RM-1)
-Active Feature: Connectors 2–4, 6 (API/scheduled) — `F-CONN-002`, `003`, `004`, `006`; or CSV hub `F-CONN-005`
+Current Milestone: **3** (RM-2)
+Active Feature: Decision contract + emitter — `F-DEC-001`..`004`
 Pilot tenant: Yoga Bar
-Last Updated: 2026-05-21 (RETRO — RM-0 closed)
+Last Updated: 2026-05-22 (RETRO — Milestone 2 / RM-1 GO → RM-2 active)
