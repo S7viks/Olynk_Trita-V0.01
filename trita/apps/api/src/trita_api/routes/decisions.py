@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from trita_api.auth import TenantDep
 from trita_api.db import database_url
+from trita_api.llm_drafts import make_tier2_llm_fn
 
 router = APIRouter(prefix="/v1/decisions", tags=["decisions"])
 
@@ -112,6 +113,34 @@ def get_decision_detail(decision_id: UUID, ctx: TenantDep) -> dict[str, object]:
     return {"tenant_id": str(ctx.tenant_id), "decision": detail}
 
 
+@router.get("/{decision_id}/artifacts")
+def get_decision_artifacts(decision_id: UUID, ctx: TenantDep) -> dict[str, object]:
+    """Tier-2 PO and supplier email artifacts (F-DRAFT-001, F-DRAFT-002)."""
+    try:
+        from trita_decisions.drafts import list_artifacts
+        from trita_decisions.inbox import get_decision
+    except ImportError as exc:
+        raise _decisions_unavailable(exc) from exc
+
+    try:
+        with psycopg.connect(database_url(), autocommit=True) as conn:
+            with conn.cursor() as cur:
+                if not get_decision(cur, ctx.tenant_id, decision_id):
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Decision not found",
+                    )
+                artifacts = list_artifacts(cur, ctx.tenant_id, decision_id)
+    except psycopg.Error as exc:
+        raise _db_error(exc) from exc
+
+    return {
+        "tenant_id": str(ctx.tenant_id),
+        "decision_id": str(decision_id),
+        "artifacts": artifacts,
+    }
+
+
 @router.get("/{decision_id}/timeline")
 def get_decision_timeline(decision_id: UUID, ctx: TenantDep) -> dict[str, object]:
     try:
@@ -150,6 +179,7 @@ def approve_decision(decision_id: UUID, ctx: TenantDep) -> dict[str, object]:
                     tenant_id=ctx.tenant_id,
                     decision_id=decision_id,
                     user_id=ctx.user_id,
+                    llm_tier2_fn=make_tier2_llm_fn(ctx.tenant_id),
                 )
     except LookupError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Decision not found")

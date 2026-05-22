@@ -212,6 +212,56 @@ python scripts/verify_rm1_gate.py
 
 ---
 
+## Full stack E2E (RM-0 → RM-2, Yoga Bar)
+
+**Automated (one command):**
+
+```powershell
+cd "d:\Olynk_V 0.0.1"
+python scripts/run_full_e2e_test.py
+# Expected: all PASS (RM-0 uses verify_rm0_gate.py --spine-only after inbox exists)
+```
+
+**Three terminals (manual UI + live LLM optional):**
+
+| Terminal | Command |
+|----------|---------|
+| 1 | `.\scripts\start-litellm.ps1` (optional) |
+| 2 | `.\scripts\start-api.ps1` |
+| 3 | `.\scripts\start-web.ps1` |
+
+**Manual walkthrough (check each):**
+
+| # | Step | URL / command | Pass criteria |
+|---|------|---------------|---------------|
+| 1 | Migrations | `python scripts/apply_migrations.py` | exit 0 |
+| 2 | RM-0 spine | `python scripts/verify_rm0_gate.py --spine-only` | raw>0, dim_sku>0, Shopify healthy |
+| 3 | Login | http://localhost:3000/login | Yoga Bar dev login → dashboard |
+| 4 | Sources | /sources | Shopify + connectors; health badges |
+| 5 | CSV hub | Upload Tally template on Sources | success toast; VA-26 raw rows |
+| 6 | Data Health | /reports/health | SKU count matches gold; resolution % |
+| 7 | Inventory | /inventory | Sort/filter SKUs; numbers match API |
+| 8 | Metrics API | http://127.0.0.1:8000/docs → `GET /v1/metrics/summary` | JWT; aligned counts |
+| 9 | Emit cards | `python scripts/emit_decisions.py` | emitted>0 (refresh Uni/Shopify sync if suppressed) |
+| 10 | Inbox open | /inbox?tab=open | ≤7 cards; ₹ sort |
+| 11 | Card detail | Click a card | Impact, L0 evidence, Tier-1 recommendation |
+| 12 | Reject | Reject with enum e.g. `wrong_qty` | Moves to Done; timeline shows rejected |
+| 13 | Approve REORDER | Approve a reorder card | Done + Tier-2 drafts panel + `draft_created` |
+| 14 | RM-2 gate | `python scripts/verify_rm2_gate.py` | audit approve/reject ≥1; reject has reason_enum |
+| 15 | RM-1 gate | `python scripts/verify_rm1_gate.py` | VA-13/14/26 PASS |
+| 16 | LLM | `python scripts/test-llm-draft.py` | 200; source litellm or fallback |
+
+**Pipeline refresh (optional full replay):**
+
+```powershell
+python scripts/shopify_sync_only.py   # API up
+python scripts/run_dbt.py run
+python scripts/refresh_identity.py
+python scripts/run_daily_shell.py
+```
+
+---
+
 ## Recording results
 
 In HANDOFF **Scrutiny / Behavioral**:

@@ -24,6 +24,7 @@ MIGRATION_ORDER = [
     "20260520900000_feat_schema.sql",
     "20260521000000_decisions.sql",
     "20260521100000_decision_audit.sql",
+    "20260521200000_decision_artifacts.sql",
 ]
 
 

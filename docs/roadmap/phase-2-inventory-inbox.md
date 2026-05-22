@@ -1,5 +1,7 @@
 # Phase 2 — Inventory Inbox (Weeks 6–8)
 
+**Status (2026-05-22):** **Closed** — RM-2 GO; evidence `scripts/verify_rm2_gate.py` (VA-15–17, RM-2 gate). See [HANDOFF.md](../../HANDOFF.md) RETRO Milestone 3.
+
 **Goal:** Closed loop on web — surface, approve/reject, audit, draft, outcomes.
 
 **Exit:** Pilot accepts or rejects ≥1 card with reason; suppression verified.
@@ -90,13 +92,13 @@
 
 ## Deliverables checklist
 
-- [ ] Cards on pilot + fixtures
-- [ ] Inbox accept/reject/snooze + audit
-- [ ] ≤7 cards/week verified
-- [ ] Tier-2 draft on approve
-- [ ] 4 reports (incl. health from P1)
-- [ ] Outcome scheduler running
-- [ ] Pilot sign-off: ≥1 decision action
+- [x] Cards on pilot + fixtures
+- [x] Inbox accept/reject/snooze + audit
+- [x] ≤7 cards/week verified
+- [x] Tier-2 draft on approve
+- [ ] 4 reports (incl. health from P1) — health from P1; aging/dead/reorder deferred
+- [ ] Outcome scheduler running — `F-DEC-006` deferred
+- [x] Pilot sign-off: ≥1 decision action
 
 ---
 

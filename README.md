@@ -21,9 +21,9 @@ This repository is the **ground-up build** workspace. Application code will live
 
 ## Status
 
-**Phase:** RM-2 — Decision Inbox + suppression (Weeks 6–8)  
-**Monorepo:** `trita/` — RM-0 + RM-1 complete for Yoga Bar (see [HANDOFF.md](HANDOFF.md) RETRO 2026-05-22)  
-**Next action:** [docs/BUILD-ORDER.md](docs/BUILD-ORDER.md) — `F-DEC-001`..`004` decision contract + emitter
+**Phase:** RM-3 — Causal + proactive + chat (Weeks 9–11)  
+**Monorepo:** `trita/` — RM-0…RM-2 complete for Yoga Bar (see [HANDOFF.md](HANDOFF.md) RETRO Milestone 3, 2026-05-22)  
+**Next action:** [docs/BUILD-ORDER.md](docs/BUILD-ORDER.md) — `F-CAUSAL-001`..`003` association + DoWhy + card narrative
 
 ## Quick copy
 

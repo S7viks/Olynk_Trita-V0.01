@@ -165,6 +165,15 @@ export type DecisionDetail = {
     projection_hash: string;
     timestamp: string | null;
   }>;
+  artifacts?: DecisionArtifact[];
+};
+
+export type DecisionArtifact = {
+  id: string;
+  artifact_type: "po_draft" | "supplier_email";
+  payload: Record<string, unknown>;
+  source: string;
+  created_at: string | null;
 };
 
 export async function fetchInbox(tab: "open" | "snoozed" | "done" = "open") {

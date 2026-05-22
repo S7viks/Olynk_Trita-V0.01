@@ -23,3 +23,4 @@
 | 2026-05-21 | **RM-0 gate closed** | Yoga Bar: raw→gold, health=healthy, VA-12; `scripts/verify_rm0_gate.py` |
 | 2026-05-21 | **RETRO Milestone 1 → RM-0 GO** | Blocking VAs checked (VA-10/04/08 deferred); pytest 44 passed; doc sweep; RM-1 active |
 | 2026-05-22 | **RETRO Milestone 2 → RM-1 GO** | `verify_rm1_gate.py` exit 0; VA-13/14/26; pytest 62 passed; Scrutiny+BEHAVE PASS; RM-2 active |
+| 2026-05-22 | **RETRO Milestone 3 → RM-2 GO** | `verify_rm2_gate.py` exit 0 (audit≥1); pytest 80+18; Scrutiny PASS; VA-15–17 + gate; RM-3 active |

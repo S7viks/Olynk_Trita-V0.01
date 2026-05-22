@@ -23,10 +23,12 @@ Granular program milestones for **Milestone Review** and **VALIDATION.md** gates
 
 **RM-1 gate closed (2026-05-21):** `python scripts/verify_rm1_gate.py` exit 0; MISSION item 21 checked. VA-13/14/26 checked in VALIDATION.
 
-**RM-2 is active.** RM-1 prerequisites met:
+**RM-2 gate closed (2026-05-22):** `python scripts/verify_rm2_gate.py` exit 0; MISSION items 22–25 checked; VA-15–17 + RM-2 gate in VALIDATION.
 
-1. Six-app graph + CSV hub + metrics + Data Health UI shipped.
-2. Evidence: `scripts/verify_rm1_gate.py`; optional order-line seed via `scripts/seed_yoga_bar_shopify_orders.py` when Shopify API returns no orders.
+**RM-3 is active.** Prerequisites:
+
+1. Decision inbox + suppression + Tier-2 drafts shipped (`F-DEC-*`, `F-INBOX-*`, `F-DRAFT-*`).
+2. Evidence: `scripts/verify_rm2_gate.py`; Scrutiny + pytest in HANDOFF RETRO 2026-05-22.
 
 ---
 

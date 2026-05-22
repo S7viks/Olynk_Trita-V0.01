@@ -54,16 +54,49 @@ def main() -> int:
                 (tenant_id,),
             )
             emitted_audit = int(cur.fetchone()[0])
+            cur.execute(
+                """
+                SELECT count(*) FROM public.decision_audit
+                WHERE tenant_id = %s
+                  AND action = 'rejected'::public.decision_audit_action
+                  AND reason_enum IS NULL
+                """,
+                (tenant_id,),
+            )
+            reject_missing_enum = int(cur.fetchone()[0])
+            cur.execute(
+                """
+                SELECT action::text, reason_enum::text, created_at
+                FROM public.decision_audit
+                WHERE tenant_id = %s
+                  AND action IN (
+                      'approved'::public.decision_audit_action,
+                      'rejected'::public.decision_audit_action
+                  )
+                ORDER BY created_at DESC
+                LIMIT 3
+                """,
+                (tenant_id,),
+            )
+            recent_actions = cur.fetchall()
 
     print(f"tenant_id={tenant_id}")
     print(f"decisions={total} audit_approve_reject={acted} audit_emitted={emitted_audit}")
+    for action, reason, ts in recent_actions:
+        print(f"  recent: {action} reason_enum={reason} at={ts}")
 
     if total == 0:
         print("FAIL: no decisions — run scripts/emit_decisions.py", file=sys.stderr)
         return 1
     if acted < 1:
         print(
-            "FAIL: no approve/reject audit — use /inbox or POST /v1/decisions/{id}/reject",
+            "FAIL: no approve/reject audit — run scripts/complete_rm2_gate.py or /inbox",
+            file=sys.stderr,
+        )
+        return 1
+    if reject_missing_enum > 0:
+        print(
+            "FAIL: reject audit rows missing reason_enum (required on reject)",
             file=sys.stderr,
         )
         return 1

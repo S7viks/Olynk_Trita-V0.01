@@ -238,6 +238,43 @@ export function DecisionDetailPanel({
         </form>
       ) : null}
 
+      {(decision.artifacts?.length ?? 0) > 0 ? (
+        <section style={{ marginBottom: "1rem" }}>
+          <h3 style={{ fontSize: "0.95rem" }}>Tier-2 drafts</h3>
+          <p style={{ margin: "0 0 0.75rem", fontSize: "0.8rem", color: "var(--muted)" }}>
+            Human executes — no external API write. Copy into your ERP or email client.
+          </p>
+          {decision.artifacts?.map((art) => (
+            <details
+              key={art.id}
+              style={{
+                marginBottom: "0.5rem",
+                padding: "0.65rem 0.75rem",
+                border: "1px solid var(--border)",
+                borderRadius: 6,
+                background: "var(--bg)",
+              }}
+            >
+              <summary style={{ cursor: "pointer", fontWeight: 600, fontSize: "0.85rem" }}>
+                {art.artifact_type === "po_draft" ? "PO draft" : "Supplier email"} ·{" "}
+                {art.source}
+              </summary>
+              <pre
+                style={{
+                  margin: "0.5rem 0 0",
+                  fontSize: "0.75rem",
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
+                  color: "var(--text)",
+                }}
+              >
+                {JSON.stringify(art.payload, null, 2)}
+              </pre>
+            </details>
+          ))}
+        </section>
+      ) : null}
+
       <section>
         <h3 style={{ fontSize: "0.95rem" }}>Timeline</h3>
         {decision.timeline.length === 0 ? (

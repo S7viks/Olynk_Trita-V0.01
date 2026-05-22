@@ -9,7 +9,7 @@ Single hub for humans and Cursor agents. **Authority order:** code + HANDOFF →
 | Step | Path | Why |
 |------|------|-----|
 | 0 | [checklists/BASELINE.md](./checklists/BASELINE.md) | Human once; Tier A+B exists |
-| — | [../HANDOFF.md](../HANDOFF.md) § RETRO 2026-05-22 | RM-1 closed; RM-2 active |
+| — | [../HANDOFF.md](../HANDOFF.md) § RETRO Milestone 3 (2026-05-22) | RM-2 closed; RM-3 active |
 | 1 | [../MISSION.md](../MISSION.md) | Goal, milestone, active feature, Worker Procedures |
 | 2 | [../VALIDATION.md](../VALIDATION.md) | VA assertions — never weaken |
 | 3 | [../HANDOFF.md](../HANDOFF.md) | Latest implementation truth |

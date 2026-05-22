@@ -76,8 +76,8 @@ Spec: [connect-sources.md](./connect-sources.md)
 | F-INBOX-003 | Accept/reject/snooze | 2 | **done** | F-INBOX-002 | Reject reason enum required |
 | F-INBOX-004 | Timeline | 2 | **done** | F-DEC-005 | Audit timeline on detail |
 | F-INBOX-005 | Reject reason analytics | 2 | planned | F-INBOX-003 | Internal view |
-| F-DRAFT-001 | PO draft tier-2 | 2 | F-INBOX-003 | Schema-bound LLM |
-| F-DRAFT-002 | Supplier email draft | 2 | F-DRAFT-001 | On approve |
+| F-DRAFT-001 | PO draft tier-2 | 2 | **done** | F-INBOX-003 | Schema-bound LLM; qty locked to engine |
+| F-DRAFT-002 | Supplier email draft | 2 | **done** | F-DRAFT-001 | On approve → `decision_artifacts` |
 | F-DEC-BLOCKED-PRE | Unresolved SKU handling | 1 | F-ID-001 | List exportable |
 
 Spec: [decision-inbox.md](./decision-inbox.md)

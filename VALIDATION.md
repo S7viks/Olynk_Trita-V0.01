@@ -56,6 +56,7 @@
 - [x] **VA-15:** Dedup `(tenant, type, sku, week)` prevents duplicate cards _(UNIQUE `suppression_key`; `test_decisions.py`)_
 - [x] **VA-16:** ≤7 new decision cards per tenant per rolling 7 days _(emitter cap; `test_emit_respects_weekly_cap`)_
 - [x] **VA-17:** Stale Shopify or Unicommerce past SLA suppresses inventory decision emit _(integrity module; `test_emit_integrity_suppressed`)_
+- [x] **RM-2 gate:** **Yoga Bar** — ≥1 decision with approve or reject audit; reject uses `reason_enum` _(2026-05-22 RETRO: `verify_rm2_gate.py` exit 0 — `audit_approve_reject=4`; `complete_rm2_gate.py` for fresh pilot seed)_
 
 ### Causal (Milestone 4 — RM-3)
 

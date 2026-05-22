@@ -6,6 +6,8 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
+from collections.abc import Callable
+
 from trita_decisions.audit import REJECT_REASONS, append_audit, list_audit_timeline
 
 
@@ -105,6 +107,7 @@ def approve_decision(
     tenant_id: UUID,
     decision_id: UUID,
     user_id: UUID,
+    llm_tier2_fn: Callable[[str, dict[str, Any], dict[str, Any]], dict[str, Any] | None] | None = None,
 ) -> dict[str, Any]:
     row = get_decision(cur, tenant_id, decision_id)
     if not row:
@@ -128,7 +131,26 @@ def approve_decision(
         action="approved",
         projection_hash=row["projection_hash"],
     )
-    return {"decision_id": str(decision_id), "status": "approved"}
+
+    tier2: dict[str, Any] | None = None
+    try:
+        from trita_decisions.drafts import maybe_create_tier2_drafts
+
+        tier2 = maybe_create_tier2_drafts(
+            cur,
+            tenant_id=tenant_id,
+            decision_id=decision_id,
+            user_id=user_id,
+            decision=row,
+            llm_fn=llm_tier2_fn,
+        )
+    except Exception:
+        tier2 = None
+
+    out: dict[str, Any] = {"decision_id": str(decision_id), "status": "approved"}
+    if tier2 is not None:
+        out["tier2_drafts"] = tier2
+    return out
 
 
 def reject_decision(
@@ -222,4 +244,10 @@ def decision_with_timeline(
     if not decision:
         return None
     decision["timeline"] = list_audit_timeline(cur, tenant_id, decision_id)
+    try:
+        from trita_decisions.drafts import list_artifacts
+
+        decision["artifacts"] = list_artifacts(cur, tenant_id, decision_id)
+    except Exception:
+        decision["artifacts"] = []
     return decision

@@ -1,4 +1,7 @@
-"""RM-0 gate evidence: Yoga Bar raw + gold + health; no decision tables."""
+"""RM-0 gate evidence: Yoga Bar raw + gold + health.
+
+VA-12 (no decision cards) applies only before RM-2. After inbox ships, use --spine-only.
+"""
 from __future__ import annotations
 
 import os
@@ -18,6 +21,7 @@ if ENV.exists():
 
 
 def main() -> int:
+    spine_only = "--spine-only" in sys.argv
     tid_raw = os.environ.get("YOGA_BAR_TENANT_ID", "").strip()
     url = os.environ.get("DATABASE_URL", "").strip()
     if not tid_raw or not url:
@@ -47,23 +51,24 @@ def main() -> int:
             )
             health = cur.fetchone()
             cur.execute(
-                """
-                select table_name from information_schema.tables
-                where table_schema = 'public' and table_name ilike '%decision%'
-                """
+                "select count(*) from public.decisions where tenant_id = %s",
+                (tenant_id,),
             )
-            decision_tables = [r[0] for r in cur.fetchall()]
+            decision_rows = int(cur.fetchone()[0])
 
     print(f"tenant_id={tenant_id}")
     print(f"raw.shopify_events={raw_n}")
     print(f"gold.dim_sku={gold_n}")
     print(f"integration_health={health}")
-    print(f"public decision tables={decision_tables}")
+    print(f"decision_rows={decision_rows}")
 
     ok = raw_n > 0 and gold_n > 0 and health and health[0] == "healthy" and health[1]
-    va12 = len(decision_tables) == 0
+    va12 = decision_rows == 0
     print(f"shopify_to_gold={'PASS' if ok else 'FAIL'}")
-    print(f"va12_no_decisions={'PASS' if va12 else 'FAIL'}")
+    if spine_only:
+        print("va12_no_decision_cards=SKIP (--spine-only)")
+        return 0 if ok else 1
+    print(f"va12_no_decision_cards={'PASS' if va12 else 'FAIL'}")
     return 0 if (ok and va12) else 1
 
 

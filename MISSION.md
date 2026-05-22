@@ -49,8 +49,8 @@
 
 22. [x] Decision contract + emitter + suppression — `F-DEC-001`..`004`
 23. [x] Audit API + Inbox UI — `F-DEC-005`, `F-INBOX-001`..`004`
-24. [ ] Tier-2 drafts on approve — `F-DRAFT-001`, `F-DRAFT-002`
-25. [ ] **Gate (RM-2):** Yoga Bar — accept/reject ≥1 card with reason enum
+24. [x] Tier-2 drafts on approve — `F-DRAFT-001`, `F-DRAFT-002`
+25. [x] **Gate (RM-2):** Yoga Bar — accept/reject ≥1 card with reason enum
 
 ### Milestone 4 — RM-3: Causal + proactive (Weeks 9–11)
 
@@ -131,7 +131,7 @@ Granular tasks: [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/roadmap/`](docs/roa
 
 ## Status
 
-Current Milestone: **3** (RM-2)
-Active Feature: Tier-2 drafts + RM-2 gate — `F-DRAFT-001`, `F-DRAFT-002`, MISSION #25
+Current Milestone: **4** (RM-3)
+Active Feature: RM-3 — causal + proactive (`F-CAUSAL-001`..`003`, MISSION #26–29)
 Pilot tenant: Yoga Bar
-Last Updated: 2026-05-21 (SHIP — F-DEC-005, F-INBOX-001..004)
+Last Updated: 2026-05-22 (RETRO Milestone 3 — RM-2 GO; RM-3 active)

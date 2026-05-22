@@ -41,6 +41,8 @@ def _master_key() -> str | None:
 def _model_for_purpose(purpose: str) -> str:
     if purpose == "chat":
         return "groq-chat"
+    if purpose in ("tier2_po", "tier2_email"):
+        return "gemini-cards"
     return "gemini-cards"
 
 
@@ -80,13 +82,23 @@ def complete_draft(*, tenant_id: UUID, prompt: str, purpose: str = "card_copy") 
         return _fallback_response(tenant_id, "master_key_missing")
 
     model = _model_for_purpose(purpose)
+    system = SYSTEM_PROMPT
+    max_tokens = 256
+    if purpose in ("tier2_po", "tier2_email"):
+        system = (
+            "You output JSON only for Trita Tier-2 drafts. "
+            "Never change reorder quantities from the user message. "
+            "Do not invent stock counts, cover days, or rupee amounts."
+        )
+        max_tokens = 512
+
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": system},
             {"role": "user", "content": prompt},
         ],
-        "max_tokens": 256,
+        "max_tokens": max_tokens,
     }
     try:
         response = httpx.post(
@@ -113,7 +125,16 @@ def complete_draft(*, tenant_id: UUID, prompt: str, purpose: str = "card_copy") 
     total_tokens = int(usage.get("total_tokens") or prompt_tokens + completion_tokens)
     record_usage(tenant_id, total_tokens)
 
-    result = _sanitize_or_fallback(text, tenant_id)
-    result["tokens_used"] = total_tokens
-    result["tenant_tokens_total"] = tokens_used(tenant_id)
+    if purpose in ("tier2_po", "tier2_email"):
+        result = {
+            "text": text.strip(),
+            "source": "litellm",
+            "reason": None,
+            "tokens_used": total_tokens,
+            "tenant_tokens_total": tokens_used(tenant_id),
+        }
+    else:
+        result = _sanitize_or_fallback(text, tenant_id)
+        result["tokens_used"] = total_tokens
+        result["tenant_tokens_total"] = tokens_used(tenant_id)
     return result
