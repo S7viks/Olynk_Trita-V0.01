@@ -99,6 +99,37 @@ python -m pytest trita/apps/api/tests/test_decisions_inbox.py -q
 
 ---
 
+## Scrutiny Validation — 2026-05-22 — PASS (independent re-run, F-DEC-005 / inbox)
+
+**Scope:** Confirm prior **FAIL** remediated; no new SHIP since F-DEC-005 / F-INBOX.
+
+**Reviewer:** Scrutiny (adversarial review; no implementation)
+
+### Checks run (fresh)
+
+| Check | Result |
+|-------|--------|
+| `pytest trita/apps/api/tests/ -q` (no `DATABASE_URL`) | **74 passed**, 3 skipped |
+| `pytest tests/test_decisions.py` + `test_decisions_inbox.py` | **12 passed** |
+| `pnpm --filter @trita/web build` | **exit 0** |
+| `python scripts/verify_rm1_gate.py` | **exit 0** |
+| `python scripts/verify_rm2_gate.py` | **FAIL** — `public.decision_audit` does not exist (migration not applied to linked DB) |
+| Prior FAIL (`append_audit` in weekly cap test) | **REMEDIATED** — `@patch append_audit` on `test_emit_respects_weekly_cap` |
+
+### Per-assertion
+
+| VA / item | Verdict |
+|-----------|---------|
+| F-DEC-005 / F-INBOX-001..004 | **PASS** |
+| VA-01, VA-02, VA-03, VA-15–17 | **PASS** (code + unit tests) |
+| Regression (metrics, identity, csv, shopify) | **PASS** |
+| **RM-2 gate (#25)** | **OPEN** (live) — apply `20260521100000_decision_audit.sql` + pilot approve/reject + `verify_rm2_gate.py` |
+| Cross-tenant inbox test | **MISSING** (non-blocking) |
+
+**VERDICT:** **PASS** — inbox SHIP merge-ready from tests/code. Close **MISSION #25** with migration apply + gate script after human accept/reject on Yoga Bar.
+
+---
+
 ## SHIP — F-DEC-001..004 — 2026-05-21
 
 **Package:** `trita/packages/decisions` — contract, impact floors, integrity suppress, emitter.
@@ -2515,5 +2546,48 @@ git grep … SUPABASE_SERVICE_ROLE_KEY=
 **Overall: PASS** — Decisions SHIP green in CI. Live emit returned 0 cards due to integrity suppress (stale/degraded connector) — correct per VA-17.
 
 **Next:** `F-DEC-005`, `F-INBOX-*`; update `verify_rm0_gate.py` or scope VA-12 to RM-0 snapshot only.
+
+---
+
+## Behavioral (automated) — 2026-05-20 — PASS (F-DEC-005, F-INBOX-001..004)
+
+**BEHAVE role** — RM-1 regression + **F-DEC-005** (audit) + **F-INBOX-001..004** (inbox API + `/inbox` web)  
+**Scrutiny precondition:** **MET** — `Scrutiny Validation — 2026-05-22 — PASS (independent re-run, F-DEC-005 / inbox)`
+
+### Commands (fresh)
+
+| Command | Exit | Notes |
+|---------|------|-------|
+| `pytest trita/apps/api/tests/ -q` | **0** | **74 passed**, 3 skipped |
+| `pytest tests/test_decisions.py tests/test_decisions_inbox.py -q` | **0** | **12 passed** — VA-15–17, inbox approve/reject/snooze |
+| `python scripts/verify_rm1_gate.py` | **0** | VA-13 100%, VA-14, VA-26 |
+| `python scripts/apply_migrations.py` | **0** | Applied `20260521100000_decision_audit.sql` |
+| `python scripts/verify_rm2_gate.py` | **1** | **OPEN (live)** — `decisions=0`; no approve/reject audit rows yet |
+| `python scripts/verify_rm0_gate.py` | **1** | **expected** — `public.decisions` present → VA-12 script outdated post-RM-2 |
+| `python scripts/verify_metrics_gate.py` | **0** | feat=27 aligned |
+| Regression bundle (shopify, csv, reports, env, jwt, adr001, llm, health, render) | **0** | **43 passed** |
+| `pytest trita/data/dlt/tests/ -q` | **0** | 6 passed |
+| `pytest trita/data/dbt/tests/test_dbt_contract.py -q` | **0** | 7 passed |
+| `pytest trita/data/orchestration/tests/test_daily_shell_defs.py -q` | **0** | 3 passed |
+| `pnpm --filter @trita/web build` | **0** | `/inbox` compiles |
+| `git grep` (secrets) | **0** | env var names only in tests/scripts |
+| `python scripts/emit_decisions.py` | **2** | integrity suppress (unicommerce) — **0 cards**; VA-17 behavior |
+
+### VA summary
+
+| VA | Verdict |
+|----|---------|
+| **VA-15, VA-16, VA-17** | **PASS** — `test_decisions.py` |
+| **VA-03** | **PASS** — no LLM on inbox actions |
+| **VA-01, VA-02** | **PASS** — JWT on approve/reject; `decision_audit` RLS migration applied |
+| **VA-13, VA-14, VA-26** | **PASS** — `verify_rm1_gate.py` |
+| **F-DEC-005 / F-INBOX-001..004** | **PASS** (automated) |
+| **MISSION #25 (RM-2 gate)** | **OPEN** (live) — emit cards + pilot accept/reject in `/inbox`, then re-run `verify_rm2_gate.py` |
+| **VA-12** (RM-0 script) | **N/A** — `verify_rm0_gate.py` fails when `decisions` table present |
+| VA-04, VA-08, VA-10 | **DEFERRED** / **N/A** (local dev) |
+
+**Overall: PASS** — Inbox SHIP green in CI. Live RM-2 gate blocked on zero decisions + no audit actions (integrity suppress on emit; human inbox step pending).
+
+**Next:** Resolve connector integrity or seed candidates → `emit_decisions.py` → approve/reject one card → `verify_rm2_gate.py`; optional cross-tenant inbox isolation test.
 
 ---

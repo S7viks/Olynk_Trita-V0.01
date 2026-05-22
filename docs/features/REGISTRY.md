@@ -63,19 +63,19 @@ Spec: [connect-sources.md](./connect-sources.md)
 
 ## Decisions & inbox
 
-| ID | Name | Phase | Deps | Acceptance criteria |
-|----|------|-------|------|---------------------|
-| F-DEC-001 | Card emitter (4 types) | 2 | F-METRICS-* | JSON contract valid |
-| F-DEC-002 | Suppression dedup + cap | 2 | F-DEC-001 | ≤7/week test |
-| F-DEC-003 | Integrity suppress | 2 | F-CONN-HEALTH | Stale → no emit |
-| F-DEC-004 | ₹ impact floors | 2 | F-METRICS-004 | Conservative doc |
-| F-DEC-005 | Audit log immutable | 2 | F-DEC-001 | All actions logged |
-| F-DEC-006 | outcome T+7/T+14 | 2 | F-DEC-005 | Jobs run |
-| F-INBOX-001 | Inbox list | 2 | F-DEC-001 | Filter/sort |
-| F-INBOX-002 | Card detail | 2 | F-INBOX-001 | Evidence links |
-| F-INBOX-003 | Accept/reject/snooze | 2 | F-INBOX-002 | Enum reasons |
-| F-INBOX-004 | Timeline | 2 | F-DEC-005 | Per decision |
-| F-INBOX-005 | Reject reason analytics | 2 | F-INBOX-003 | Internal view |
+| ID | Name | Phase | Status | Deps | Acceptance criteria |
+|----|------|-------|--------|------|---------------------|
+| F-DEC-001 | Card emitter (4 types) | 2 | **done** | F-METRICS-* | `trita_decisions` + `POST /v1/decisions/emit` |
+| F-DEC-002 | Suppression dedup + cap | 2 | **done** | F-DEC-001 | Unique `suppression_key`; ≤7/7d |
+| F-DEC-003 | Integrity suppress | 2 | **done** | F-CONN-HEALTH | Shopify/Uni degraded → no emit |
+| F-DEC-004 | ₹ impact floors | 2 | **done** | F-METRICS-004 | `impact.inr_floor` deterministic |
+| F-DEC-005 | Audit log immutable | 2 | **done** | F-DEC-001 | `decision_audit` append-only |
+| F-DEC-006 | outcome T+7/T+14 | 2 | planned | F-DEC-005 | Jobs run |
+| F-INBOX-001 | Inbox list | 2 | **done** | F-DEC-001 | `/inbox` tabs Open/Snoozed/Done |
+| F-INBOX-002 | Card detail | 2 | **done** | F-INBOX-001 | Impact, evidence, L0 |
+| F-INBOX-003 | Accept/reject/snooze | 2 | **done** | F-INBOX-002 | Reject reason enum required |
+| F-INBOX-004 | Timeline | 2 | **done** | F-DEC-005 | Audit timeline on detail |
+| F-INBOX-005 | Reject reason analytics | 2 | planned | F-INBOX-003 | Internal view |
 | F-DRAFT-001 | PO draft tier-2 | 2 | F-INBOX-003 | Schema-bound LLM |
 | F-DRAFT-002 | Supplier email draft | 2 | F-DRAFT-001 | On approve |
 | F-DEC-BLOCKED-PRE | Unresolved SKU handling | 1 | F-ID-001 | List exportable |

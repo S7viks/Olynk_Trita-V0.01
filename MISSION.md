@@ -47,8 +47,8 @@
 
 ### Milestone 3 — RM-2: Inventory inbox (Weeks 6–8)
 
-22. [ ] Decision contract + emitter + suppression — `F-DEC-001`..`004`
-23. [ ] Audit API + Inbox UI — `F-DEC-005`, `F-INBOX-001`..`004`
+22. [x] Decision contract + emitter + suppression — `F-DEC-001`..`004`
+23. [x] Audit API + Inbox UI — `F-DEC-005`, `F-INBOX-001`..`004`
 24. [ ] Tier-2 drafts on approve — `F-DRAFT-001`, `F-DRAFT-002`
 25. [ ] **Gate (RM-2):** Yoga Bar — accept/reject ≥1 card with reason enum
 
@@ -132,6 +132,6 @@ Granular tasks: [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/roadmap/`](docs/roa
 ## Status
 
 Current Milestone: **3** (RM-2)
-Active Feature: Decision contract + emitter — `F-DEC-001`..`004`
+Active Feature: Tier-2 drafts + RM-2 gate — `F-DRAFT-001`, `F-DRAFT-002`, MISSION #25
 Pilot tenant: Yoga Bar
-Last Updated: 2026-05-22 (RETRO — Milestone 2 / RM-1 GO → RM-2 active)
+Last Updated: 2026-05-21 (SHIP — F-DEC-005, F-INBOX-001..004)

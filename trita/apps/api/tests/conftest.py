@@ -18,6 +18,10 @@ ONTOLOGY_SRC = Path(__file__).resolve().parents[3] / "packages" / "ontology" / "
 if str(ONTOLOGY_SRC) not in sys.path:
     sys.path.insert(0, str(ONTOLOGY_SRC))
 
+DECISIONS_SRC = Path(__file__).resolve().parents[3] / "packages" / "decisions" / "src"
+if str(DECISIONS_SRC) not in sys.path:
+    sys.path.insert(0, str(DECISIONS_SRC))
+
 
 @pytest.fixture(autouse=True)
 def _env(monkeypatch: pytest.MonkeyPatch) -> None:

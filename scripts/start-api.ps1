@@ -18,6 +18,8 @@ pip install -e ".[dev]"
 pip install -e $DltDir
 $OntologyDir = Join-Path $RepoRoot "trita\packages\ontology"
 pip install -e $OntologyDir
+$DecisionsDir = Join-Path $RepoRoot "trita\packages\decisions"
+pip install -e $DecisionsDir
 
 $port = if ($env:TRITA_API_PORT) { $env:TRITA_API_PORT } else { "8000" }
 $inUse = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue

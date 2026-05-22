@@ -22,6 +22,8 @@ MIGRATION_ORDER = [
     "20260520700000_csv_hub.sql",
     "20260520800000_identity_v1.sql",
     "20260520900000_feat_schema.sql",
+    "20260521000000_decisions.sql",
+    "20260521100000_decision_audit.sql",
 ]
 
 

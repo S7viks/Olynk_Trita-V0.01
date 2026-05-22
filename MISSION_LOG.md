@@ -18,6 +18,7 @@
 | 2026-05-20 | SHIP T-P0-005 + F-PLAT-003 | render.yaml; LiteLLM proxy + API budget/fallback; VA-07 pytest pass |
 | 2026-05-20 | SHIP F-PLAT-004 T-P0-032 | OpenMeter CloudEvents; LLM/connector/dbt meters; VA-08 |
 | 2026-05-21 | SHIP F-UI-NAV / F-UI-SOURCES-SHELL / F-CONN-HEALTH | Next auth + Sources; integration health API; web OAuth/sync |
+| 2026-05-21 | SHIP F-DEC-001..004 | `trita_decisions` emitter; suppression + integrity; `POST /v1/decisions/emit` |
 | 2026-05-21 | **RM-1 gate closed** | Yoga Bar: VA-13/14/26 PASS; `scripts/verify_rm1_gate.py`; CSV idempotent tests |
 | 2026-05-21 | **RM-0 gate closed** | Yoga Bar: raw→gold, health=healthy, VA-12; `scripts/verify_rm0_gate.py` |
 | 2026-05-21 | **RETRO Milestone 1 → RM-0 GO** | Blocking VAs checked (VA-10/04/08 deferred); pytest 44 passed; doc sweep; RM-1 active |

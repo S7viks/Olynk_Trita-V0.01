@@ -1,8 +1,11 @@
 [project]
 name = "trita-decisions"
 version = "0.0.1"
-description = "Decision card contract, suppression, audit"
+description = "Decision contract, emitter, suppression"
 requires-python = ">=3.11"
+dependencies = [
+    "psycopg[binary]>=3.2.0",
+]
 
 [build-system]
 requires = ["hatchling"]

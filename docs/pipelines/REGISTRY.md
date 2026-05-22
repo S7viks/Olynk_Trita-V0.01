@@ -42,7 +42,7 @@ Orchestrator: **Dagster** (ADR-001 Accepted). All jobs must be **idempotent** by
 | P-FEAT-MATRIX-WEEKLY | weekly | 3 | gold + ads + logistics | `feat.sku_week_matrix` |
 | P-CAUSAL-ASSOC | weekly | 3 | matrix | association edges |
 | P-CAUSAL-DOWHY | weekly | 3 | candidates | L2/L3 edges | [P-CAUSAL-DOWHY.md](./P-CAUSAL-DOWHY.md) |
-| P-DECISION-EMIT | after metrics (+ causal) | 2–3 | features | `decisions` table |
+| P-DECISION-EMIT | after metrics | 2 | **active** | feat metrics | `public.decisions` (Dagster `decision_emit_op`) |
 | P-OUTCOME-EVAL | daily | 2 | decisions + metrics | outcome rows |
 
 ---

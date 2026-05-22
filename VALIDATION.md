@@ -53,9 +53,9 @@
 
 ### Decision inbox (Milestone 3 — RM-2)
 
-- [ ] **VA-15:** Dedup `(tenant, type, sku, week)` prevents duplicate cards
-- [ ] **VA-16:** ≤7 new decision cards per tenant per rolling 7 days
-- [ ] **VA-17:** Stale Shopify or Unicommerce past SLA suppresses inventory decision emit
+- [x] **VA-15:** Dedup `(tenant, type, sku, week)` prevents duplicate cards _(UNIQUE `suppression_key`; `test_decisions.py`)_
+- [x] **VA-16:** ≤7 new decision cards per tenant per rolling 7 days _(emitter cap; `test_emit_respects_weekly_cap`)_
+- [x] **VA-17:** Stale Shopify or Unicommerce past SLA suppresses inventory decision emit _(integrity module; `test_emit_integrity_suppressed`)_
 
 ### Causal (Milestone 4 — RM-3)
 

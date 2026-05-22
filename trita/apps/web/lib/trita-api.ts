@@ -130,3 +130,58 @@ export async function fetchSkuMetrics(params: {
   const qs = q.toString();
   return tritaFetch<SkuMetricsResponse>(`/v1/metrics/sku${qs ? `?${qs}` : ""}`);
 }
+
+export type InboxListItem = {
+  id: string;
+  type: string;
+  sku_id: string;
+  sku_code: string | null;
+  event: string;
+  status: string;
+  inr_floor: number;
+  preview: string;
+  created_at: string | null;
+};
+
+export type DecisionDetail = {
+  id: string;
+  type: string;
+  sku_id: string;
+  sku_code: string | null;
+  event: string;
+  status: string;
+  suppression_key: string;
+  projection_hash: string;
+  inr_floor: number;
+  card: Record<string, unknown>;
+  created_at: string | null;
+  snoozed_until: string | null;
+  timeline: Array<{
+    id: string;
+    user_id: string;
+    action: string;
+    reason_enum: string | null;
+    reason_text: string | null;
+    projection_hash: string;
+    timestamp: string | null;
+  }>;
+};
+
+export async function fetchInbox(tab: "open" | "snoozed" | "done" = "open") {
+  return tritaFetch<{
+    tenant_id: string;
+    tab: string;
+    count: number;
+    items: InboxListItem[];
+  }>(`/v1/decisions?tab=${tab}`);
+}
+
+export async function fetchDecisionDetail(id: string) {
+  return tritaFetch<{ tenant_id: string; decision: DecisionDetail }>(
+    `/v1/decisions/${id}`
+  );
+}
+
+export async function fetchRejectReasons() {
+  return tritaFetch<{ reasons: string[] }>("/v1/decisions/reject-reasons");
+}

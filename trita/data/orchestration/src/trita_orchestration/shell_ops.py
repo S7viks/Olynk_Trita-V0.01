@@ -48,9 +48,32 @@ def dbt_run_op(shopify_sync: dict[str, Any]) -> dict[str, Any]:
 
 
 @op
-def integration_health_op(metrics_dbt: dict[str, Any]) -> dict[str, int]:
-    """Verify raw + gold + feat metrics for pilot tenant (VA-09 / VA-14)."""
+def decision_emit_op(metrics_dbt: dict[str, Any]) -> dict[str, Any]:
+    """Emit inventory decisions after metrics (P-DECISION-EMIT, F-DEC-001..004)."""
     del metrics_dbt
+    load_repo_env()
+    tenant_id = pilot_tenant_id()
+    url = os.environ.get("DATABASE_URL", "").strip()
+    if not url:
+        raise Failure(description="DATABASE_URL not set")
+    try:
+        from trita_decisions.emitter import emit_decisions
+    except ImportError as exc:
+        raise Failure(description=f"trita-decisions not installed: {exc}") from exc
+
+    with psycopg.connect(url, autocommit=True) as conn:
+        result = emit_decisions(conn, tenant_id)
+    if result.get("integrity_suppressed"):
+        raise Failure(
+            description=f"Integrity suppress active ({result.get('integrity_source')})"
+        )
+    return result
+
+
+@op
+def integration_health_op(decision_emit: dict[str, Any]) -> dict[str, int]:
+    """Verify raw + gold + feat metrics for pilot tenant (VA-09 / VA-14)."""
+    del decision_emit
     load_repo_env()
     tenant_id = pilot_tenant_id()
     url = os.environ.get("DATABASE_URL", "").strip()
