@@ -161,6 +161,41 @@ def get_csv_upload(tenant_id: UUID, upload_id: UUID) -> dict[str, Any] | None:
     }
 
 
+def reset_csv_hub_source(*, tenant_id: UUID, logical_source: str) -> dict[str, int]:
+    """Remove CSV hub data for a logical source so the tenant can re-upload."""
+    with psycopg.connect(database_url(), autocommit=True) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                DELETE FROM raw.csv_hub_events
+                WHERE tenant_id = %s AND source = %s
+                """,
+                (tenant_id, logical_source),
+            )
+            raw_deleted = cur.rowcount
+            cur.execute(
+                """
+                DELETE FROM quarantine.csv_hub
+                WHERE tenant_id = %s AND source = %s
+                """,
+                (tenant_id, logical_source),
+            )
+            quarantine_deleted = cur.rowcount
+            cur.execute(
+                """
+                DELETE FROM public.csv_upload
+                WHERE tenant_id = %s AND logical_source = %s
+                """,
+                (tenant_id, logical_source),
+            )
+            uploads_deleted = cur.rowcount
+    return {
+        "raw_deleted": raw_deleted,
+        "quarantine_deleted": quarantine_deleted,
+        "uploads_deleted": uploads_deleted,
+    }
+
+
 def insert_quarantine_rows(*, tenant_id: UUID, rows: list[QuarantineRow]) -> None:
     if not rows:
         return

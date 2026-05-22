@@ -55,7 +55,10 @@ export function SourcesHealthTable({
                 {(row as IntegrationHealth & { display_name?: string }).display_name ??
                   row.source}
               </span>
-              <ConnectorTier mode={(row as IntegrationHealth & { mode?: string }).mode} />
+              <ConnectorTier
+                mode={(row as IntegrationHealth & { mode?: string }).mode}
+                tier={(row as IntegrationHealth & { tier?: string }).tier}
+              />
             </td>
             <td style={{ padding: "0.75rem 1rem" }}>
               <span
@@ -108,7 +111,7 @@ export function SourcesHealthTable({
   );
 }
 
-function ConnectorTier({ mode }: { mode?: string }) {
+function ConnectorTier({ mode, tier }: { mode?: string; tier?: string }) {
   if (mode === "csv_hub") {
     return (
       <span
@@ -122,6 +125,22 @@ function ConnectorTier({ mode }: { mode?: string }) {
         }}
       >
         CSV hub
+      </span>
+    );
+  }
+  if (tier === "beta") {
+    return (
+      <span
+        style={{
+          marginLeft: "0.5rem",
+          fontSize: "0.7rem",
+          padding: "0.1rem 0.35rem",
+          borderRadius: 4,
+          border: "1px solid var(--degraded)",
+          color: "var(--degraded)",
+        }}
+      >
+        Beta
       </span>
     );
   }

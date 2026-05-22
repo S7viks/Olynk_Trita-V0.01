@@ -25,6 +25,9 @@ MIGRATION_ORDER = [
     "20260521000000_decisions.sql",
     "20260521100000_decision_audit.sql",
     "20260521200000_decision_artifacts.sql",
+    "20260522000000_causal_edges.sql",
+    "20260522100000_proactive.sql",
+    "20260522200000_connector_rm3.sql",
 ]
 
 

@@ -144,8 +144,30 @@ export function DecisionDetailPanel({
         </p>
       </section>
 
+      {((reasoning.causal_chain as Record<string, unknown>[]) || []).length > 0 ? (
+        <section style={{ marginBottom: "1rem" }}>
+          <h3 style={{ fontSize: "0.95rem" }}>
+            Drivers ({String(reasoning.epistemic_layer ?? "L0")})
+          </h3>
+          <ul style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "0.85rem" }}>
+            {((reasoning.causal_chain as Record<string, unknown>[]) || []).map((link, i) => (
+              <li key={`${String(link.evidence_ref ?? i)}`}>
+                {String(link.label ?? link.cause ?? "driver")}
+              </li>
+            ))}
+          </ul>
+          {reasoning.causal_narrative ? (
+            <p style={{ margin: "0.5rem 0 0", fontSize: "0.85rem", color: "var(--muted)" }}>
+              {String(reasoning.causal_narrative)}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
       <section style={{ marginBottom: "1rem" }}>
-        <h3 style={{ fontSize: "0.95rem" }}>Evidence (L0)</h3>
+        <h3 style={{ fontSize: "0.95rem" }}>
+          Evidence ({String(reasoning.epistemic_layer ?? "L0")})
+        </h3>
         <ul style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "0.85rem" }}>
           {((reasoning.evidence_refs as string[]) || []).map((ref) => (
             <li key={ref}>{ref}</li>

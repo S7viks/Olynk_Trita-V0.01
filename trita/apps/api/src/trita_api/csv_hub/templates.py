@@ -46,6 +46,19 @@ TEMPLATES: dict[str, CsvTemplate] = {
         },
         required_canonical=("sku", "order_id", "qty", "occurred_at"),
     ),
+    "tpl_delhivery_shipments": CsvTemplate(
+        template_id="tpl_delhivery_shipments",
+        logical_source="delhivery",
+        entity_type="shipment",
+        display_name="Delhivery shipments export",
+        header_map={
+            "awb": ["awb", "waybill", "waybill no", "tracking number"],
+            "order_id": ["order id", "order", "client order id", "reference"],
+            "status": ["status", "shipment status", "current status"],
+            "occurred_at": ["pickup date", "date", "created at"],
+        },
+        required_canonical=("awb", "status"),
+    ),
     "tpl_generic_orders": CsvTemplate(
         template_id="tpl_generic_orders",
         logical_source="generic",

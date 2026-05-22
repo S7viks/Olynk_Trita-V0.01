@@ -1,4 +1,5 @@
 export const TRITA_TOKEN_COOKIE = "trita_access_token";
+export const TRITA_ONBOARDING_COOKIE = "trita_onboarding_done";
 
 export function apiBaseUrl(): string {
   const raw = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";

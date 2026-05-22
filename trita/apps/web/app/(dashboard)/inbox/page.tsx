@@ -45,26 +45,21 @@ export default async function InboxPage({
 
   return (
     <section>
-      <h1 style={{ marginTop: 0 }}>Decision Inbox</h1>
-      <p style={{ color: "var(--muted)", maxWidth: "42rem" }}>
-        Inventory decisions from the deterministic engine — approve, reject with
-        reason, or snooze. Max 7 new cards per rolling week (F-INBOX-001..004).
-      </p>
+      <header className="page-header">
+        <h1>Decision Inbox</h1>
+        <p>
+          Inventory decisions from the deterministic engine — approve, reject with
+          reason, or snooze. Max 7 new cards per rolling week (F-INBOX-001..004).
+        </p>
+      </header>
 
       {actionBanner ? (
-        <p
-          style={{
-            padding: "0.75rem 1rem",
-            background: "var(--surface)",
-            border: "1px solid var(--healthy)",
-            borderRadius: 8,
-          }}
-        >
+        <p className="ui-alert ui-alert-success" style={{ marginBottom: "1rem" }}>
           {actionBanner}
         </p>
       ) : null}
 
-      {error ? <p style={{ color: "var(--failed)" }}>{error}</p> : null}
+      {error ? <p className="ui-alert ui-alert-error">{error}</p> : null}
 
       {list ? (
         <>

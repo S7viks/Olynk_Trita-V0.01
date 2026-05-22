@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
-from trita_api.db import TenantMembership
+from trita_api.db import TenantMembership, TenantOnboarding
 from trita_api.main import app
 from uuid import UUID
 
@@ -23,7 +23,17 @@ def test_auth_exchange_maps_membership(tenant_a_id: UUID, user_a_id: UUID) -> No
         role="owner",
         tenant_slug="yoga-bar",
     )
-    with patch("trita_api.routes.auth.get_primary_membership", return_value=membership):
+    onboarding = TenantOnboarding(
+        tenant_id=tenant_a_id,
+        display_name="Yoga Bar",
+        slug="yoga-bar",
+        onboarding_complete=True,
+        shopify_connected=False,
+    )
+    with (
+        patch("trita_api.routes.auth.get_primary_membership", return_value=membership),
+        patch("trita_api.routes.auth.get_onboarding_status", return_value=onboarding),
+    ):
         response = client.post(
             "/v1/auth/exchange",
             headers={"Authorization": f"Bearer {user_token}"},

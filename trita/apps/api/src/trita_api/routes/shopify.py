@@ -12,7 +12,7 @@ from datetime import UTC, datetime
 
 from trita_api.auth import TenantDep
 from trita_api.crypto import encrypt_token
-from trita_api.db import get_shopify_credential, upsert_shopify_credential
+from trita_api.db import delete_shopify_credential, get_shopify_credential, upsert_shopify_credential
 from trita_api.integration_health import upsert_integration_health
 from trita_api.ingest_shopify import sync_records_to_raw
 from trita_api.shopify_oauth import (
@@ -43,10 +43,24 @@ def _default_shop() -> str:
 def shopify_connect(
     ctx: TenantDep,
     shop: str = Query(default="", description="Shop domain, e.g. tritabyolynk or tritabyolynk.myshopify.com"),
+    return_to: str = Query(default="/onboarding", description="Web path after OAuth (must start with /)"),
 ) -> RedirectResponse:
     """Start Shopify OAuth — tenant_id from JWT only."""
-    shop_domain = normalize_shop_domain(shop or _default_shop())
-    state = build_oauth_state(tenant_id=str(ctx.tenant_id), shop_domain=shop_domain)
+    raw_shop = (shop or "").strip()
+    if not raw_shop:
+        if os.environ.get("ENVIRONMENT", "development") == "development":
+            shop_domain = normalize_shop_domain(_default_shop())
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="shop is required (e.g. your-brand.myshopify.com)",
+            )
+    else:
+        shop_domain = normalize_shop_domain(raw_shop)
+    dest = return_to if return_to.startswith("/") else "/onboarding"
+    state = build_oauth_state(
+        tenant_id=str(ctx.tenant_id), shop_domain=shop_domain, return_to=dest
+    )
     url = authorize_url(shop_domain=shop_domain, state=state)
     return RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
 
@@ -125,8 +139,12 @@ def shopify_callback(
         "/"
     )
     if web_base:
+        return_path = parsed.get("return_to", "/onboarding")
+        if not str(return_path).startswith("/"):
+            return_path = "/onboarding"
+        sep = "&" if "?" in return_path else "?"
         return RedirectResponse(
-            url=f"{web_base}/sources?shopify=connected",
+            url=f"{web_base}{return_path}{sep}shopify=connected",
             status_code=status.HTTP_302_FOUND,
         )
     if os.environ.get("ENVIRONMENT", "development") == "development":
@@ -139,6 +157,19 @@ def shopify_callback(
         url="/sources?shopify=connected",
         status_code=status.HTTP_302_FOUND,
     )
+
+
+@router.delete("/connection")
+def shopify_disconnect(ctx: TenantDep) -> dict[str, object]:
+    """Remove stored Shopify token and mark integration disconnected."""
+    removed = delete_shopify_credential(ctx.tenant_id)
+    upsert_integration_health(
+        tenant_id=ctx.tenant_id,
+        source="shopify",
+        status="disconnected",
+        detail={"connected": False, "message": "Disconnected — connect again to restore sync"},
+    )
+    return {"tenant_id": str(ctx.tenant_id), "disconnected": removed}
 
 
 @router.post("/sync")

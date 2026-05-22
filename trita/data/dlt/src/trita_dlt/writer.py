@@ -30,6 +30,9 @@ RAW_TABLES: dict[str, str] = {
     "shiprocket": "raw.shiprocket_events",
     "razorpay": "raw.razorpay_events",
     "csv_hub": "raw.csv_hub_events",
+    "delhivery": "raw.delhivery_events",
+    "meta_ads": "raw.meta_ads_events",
+    "google_ads": "raw.google_ads_events",
 }
 
 

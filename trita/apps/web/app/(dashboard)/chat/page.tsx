@@ -1,11 +1,14 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { ChatPanel } from "@/components/chat-panel";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function ChatPage() {
   return (
-    <PlaceholderPage
-      title="Chat"
-      phase="3"
-      description="Grounded chat with graph context ships in RM-3."
-    />
+    <section>
+      <PageHeader
+        title="Inventory chat"
+        description="Grounded answers from your tenant graph only (F-CHAT-001/002). Refuses non-inventory topics. Does not compute reorder qty or ₹ impact (VA-03)."
+      />
+      <ChatPanel />
+    </section>
   );
 }

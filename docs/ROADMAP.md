@@ -25,10 +25,9 @@ Granular program milestones for **Milestone Review** and **VALIDATION.md** gates
 
 **RM-2 gate closed (2026-05-22):** `python scripts/verify_rm2_gate.py` exit 0; MISSION items 22–25 checked; VA-15–17 + RM-2 gate in VALIDATION.
 
-**RM-3 is active.** Prerequisites:
+**RM-3 gate closed (2026-05-22):** `python scripts/verify_rm3_gate.py` exit 0; MISSION item 29 checked. VA-18/19 in VALIDATION. Pilot: `complete_rm3_gate.py` enriches open cards; L2 edge + `analytics.causal_edges:` ref on ≥1 card.
 
-1. Decision inbox + suppression + Tier-2 drafts shipped (`F-DEC-*`, `F-INBOX-*`, `F-DRAFT-*`).
-2. Evidence: `scripts/verify_rm2_gate.py`; Scrutiny + pytest in HANDOFF RETRO 2026-05-22.
+**RM-4 is active.** Prerequisites: RM-3 gate; eight Sources connectors (3 beta); proactive + chat shipped.
 
 ---
 

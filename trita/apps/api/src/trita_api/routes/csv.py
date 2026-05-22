@@ -5,14 +5,17 @@ from __future__ import annotations
 import json
 from uuid import UUID
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, status
 
 from trita_api.auth import TenantDep, reject_tenant_override
 from trita_api.csv_hub.ingest import process_csv_upload
-from trita_api.csv_hub.db import get_csv_upload
+from trita_api.csv_hub.db import get_csv_upload, reset_csv_hub_source
 from trita_api.csv_hub.templates import list_templates
+from trita_api.integration_health import upsert_integration_health
 
 router = APIRouter(prefix="/v1/csv", tags=["csv"])
+
+CSV_RESET_SOURCES = frozenset({"tally", "delhivery", "generic"})
 
 
 @router.get("/templates")
@@ -60,15 +63,21 @@ async def csv_upload(
                 detail=f"Invalid column_map: {exc}",
             ) from exc
 
-    result = process_csv_upload(
-        tenant_id=ctx.tenant_id,
-        file_name=file.filename or "upload.csv",
-        content=content,
-        logical_source=logical_source,
-        entity_type=entity_type,
-        template_id=template_id,
-        column_map=parsed_map,
-    )
+    try:
+        result = process_csv_upload(
+            tenant_id=ctx.tenant_id,
+            file_name=file.filename or "upload.csv",
+            content=content,
+            logical_source=logical_source,
+            entity_type=entity_type,
+            template_id=template_id,
+            column_map=parsed_map,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"CSV ingest failed: {exc}",
+        ) from exc
 
     return {
         "tenant_id": str(ctx.tenant_id),
@@ -84,3 +93,38 @@ async def csv_upload(
         "skipped": result.skipped,
         "idempotent_replay": result.idempotent_replay,
     }
+
+
+@router.post("/reset")
+def csv_reset(
+    ctx: TenantDep,
+    source: str = Query(..., description="Logical source: tally, delhivery, or generic"),
+) -> dict[str, object]:
+    """Delete CSV hub uploads/raw/quarantine for a source (disconnect + clear for re-upload)."""
+    logical = source.strip().lower()
+    if logical not in CSV_RESET_SOURCES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"source must be one of: {', '.join(sorted(CSV_RESET_SOURCES))}",
+        )
+    try:
+        counts = reset_csv_hub_source(tenant_id=ctx.tenant_id, logical_source=logical)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"CSV reset failed: {exc}",
+        ) from exc
+
+    health_source = "tally" if logical == "tally" else logical
+    upsert_integration_health(
+        tenant_id=ctx.tenant_id,
+        source=health_source,
+        status="disconnected",
+        detail={
+            "connected": False,
+            "message": "CSV data cleared — upload again to reconnect",
+            "mode": "csv_hub",
+        },
+        freshness_sla_hours=168 if health_source == "tally" else 24,
+    )
+    return {"tenant_id": str(ctx.tenant_id), "source": logical, **counts}

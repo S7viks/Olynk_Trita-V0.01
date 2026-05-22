@@ -13,6 +13,7 @@ class ConnectorSpec:
     raw_table: str
     freshness_sla_hours: int
     phase: int
+    tier: str = "production"  # production | beta
 
 
 CONNECTOR_SOURCES: dict[str, ConnectorSpec] = {
@@ -56,9 +57,38 @@ CONNECTOR_SOURCES: dict[str, ConnectorSpec] = {
         freshness_sla_hours=24,
         phase=1,
     ),
+    "delhivery": ConnectorSpec(
+        source="delhivery",
+        display_name="Delhivery",
+        mode="api",
+        raw_table="raw.delhivery_events",
+        freshness_sla_hours=24,
+        phase=3,
+        tier="beta",
+    ),
+    "meta_ads": ConnectorSpec(
+        source="meta_ads",
+        display_name="Meta Ads",
+        mode="api",
+        raw_table="raw.meta_ads_events",
+        freshness_sla_hours=24,
+        phase=3,
+        tier="beta",
+    ),
+    "google_ads": ConnectorSpec(
+        source="google_ads",
+        display_name="Google Ads",
+        mode="api",
+        raw_table="raw.google_ads_events",
+        freshness_sla_hours=24,
+        phase=3,
+        tier="beta",
+    ),
 }
 
 RM1_API_SOURCES = ("unicommerce", "shiprocket", "razorpay")
+RM3_API_SOURCES = ("delhivery", "meta_ads", "google_ads")
+API_SYNC_SOURCES = RM1_API_SOURCES + RM3_API_SOURCES
 
 
 def get_spec(source: str) -> ConnectorSpec:

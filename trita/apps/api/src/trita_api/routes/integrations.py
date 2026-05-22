@@ -13,8 +13,17 @@ from trita_api.integration_health import IntegrationHealthRow, list_integration_
 
 router = APIRouter(prefix="/v1/integrations", tags=["integrations"])
 
-# Phase 1 Sources UI: production connectors for RM-1 slice (no fake rows for 7–10)
-SOURCES_UI_ORDER = ("shopify", "unicommerce", "tally", "shiprocket", "razorpay")
+# Sources UI: production RM-1 + beta RM-3 (honest disconnected until connect/sync)
+SOURCES_UI_ORDER = (
+    "shopify",
+    "unicommerce",
+    "tally",
+    "shiprocket",
+    "razorpay",
+    "delhivery",
+    "meta_ads",
+    "google_ads",
+)
 
 
 def _row_to_dict(row: IntegrationHealthRow) -> dict[str, object]:
@@ -26,6 +35,7 @@ def _row_to_dict(row: IntegrationHealthRow) -> dict[str, object]:
         "source": row.source,
         "display_name": spec.display_name if spec else row.source,
         "mode": spec.mode if spec else "api",
+        "tier": spec.tier if spec else "production",
         "status": row.status,
         "last_sync_at": last_sync,
         "freshness_sla_hours": row.freshness_sla_hours,
@@ -69,7 +79,7 @@ def _resolve_row(
     if source in stored:
         row = stored[source]
         detail = dict(row.detail or {})
-        if spec.mode == "csv_hub":
+        if spec.mode == "csv_hub" or detail.get("mode") == "csv_hub" or detail.get("upload_id"):
             has_upload = bool(detail.get("upload_id") or detail.get("valid_count"))
             detail["connected"] = has_upload
             if not detail.get("message"):

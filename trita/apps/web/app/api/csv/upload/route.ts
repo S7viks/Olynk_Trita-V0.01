@@ -3,6 +3,13 @@ import { redirect } from "next/navigation";
 
 import { TRITA_TOKEN_COOKIE, apiBaseUrl } from "@/lib/constants";
 
+function safeReturnPath(raw: string | null): string {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) {
+    return "/sources";
+  }
+  return raw.split("?")[0] ?? "/sources";
+}
+
 export async function POST(request: Request) {
   const token = cookies().get(TRITA_TOKEN_COOKIE)?.value;
   if (!token) {
@@ -10,9 +17,13 @@ export async function POST(request: Request) {
   }
 
   const form = await request.formData();
+  const returnTo = safeReturnPath(
+    typeof form.get("return_to") === "string" ? (form.get("return_to") as string) : null
+  );
+
   const file = form.get("file");
   if (!file || !(file instanceof Blob)) {
-    redirect("/sources?error=csv_no_file");
+    redirect(`${returnTo}?error=csv_no_file`);
   }
 
   const outbound = new FormData();
@@ -38,15 +49,33 @@ export async function POST(request: Request) {
   });
 
   if (!res.ok) {
-    redirect("/sources?error=csv_upload_failed");
+    const errBody = await res.json().catch(() => ({}));
+    const detail =
+      typeof (errBody as { detail?: string }).detail === "string"
+        ? (errBody as { detail: string }).detail
+        : `Upload failed (HTTP ${res.status})`;
+    redirect(
+      `${returnTo}?error=csv_upload_failed&message=${encodeURIComponent(detail.slice(0, 300))}`
+    );
   }
 
-  const body = (await res.json()) as { status?: string; quarantine_count?: number };
+  const body = (await res.json()) as {
+    status?: string;
+    quarantine_count?: number;
+    valid_count?: number;
+    row_count?: number;
+  };
   if (body.status === "failed") {
-    redirect("/sources?error=csv_validation_failed");
+    const detail =
+      body.valid_count === 0 && (body.row_count ?? 0) > 0
+        ? "All rows failed validation — check column headers match the template."
+        : "CSV validation failed — check file format.";
+    redirect(
+      `${returnTo}?error=csv_validation_failed&message=${encodeURIComponent(detail)}`
+    );
   }
   if ((body.quarantine_count ?? 0) > 0) {
-    redirect("/sources?csv=degraded");
+    redirect(`${returnTo}?csv=degraded`);
   }
-  redirect("/sources?csv=ok");
+  redirect(`${returnTo}?csv=ok`);
 }

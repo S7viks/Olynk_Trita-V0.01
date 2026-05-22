@@ -1,0 +1,16 @@
+[
+  {"date": "2026-05-05", "spend": 4200.0, "campaign_id": "gads-yb-search", "currency": "INR"},
+  {"date": "2026-05-06", "spend": 5100.5, "campaign_id": "gads-yb-search", "currency": "INR"},
+  {"date": "2026-05-07", "spend": 4800.0, "campaign_id": "gads-yb-pmax", "currency": "INR"},
+  {"date": "2026-05-08", "spend": 6200.25, "campaign_id": "gads-yb-pmax", "currency": "INR"},
+  {"date": "2026-05-09", "spend": 5500.0, "campaign_id": "gads-yb-search", "currency": "INR"},
+  {"date": "2026-05-10", "spend": 5900.0, "campaign_id": "gads-yb-brand", "currency": "INR"},
+  {"date": "2026-05-11", "spend": 4700.5, "campaign_id": "gads-yb-brand", "currency": "INR"},
+  {"date": "2026-05-12", "spend": 6100.0, "campaign_id": "gads-yb-search", "currency": "INR"},
+  {"date": "2026-05-13", "spend": 5800.75, "campaign_id": "gads-yb-pmax", "currency": "INR"},
+  {"date": "2026-05-14", "spend": 5200.0, "campaign_id": "gads-yb-pmax", "currency": "INR"},
+  {"date": "2026-05-15", "spend": 6400.0, "campaign_id": "gads-yb-search", "currency": "INR"},
+  {"date": "2026-05-16", "spend": 5000.5, "campaign_id": "gads-yb-brand", "currency": "INR"},
+  {"date": "2026-05-17", "spend": 4600.0, "campaign_id": "gads-yb-brand", "currency": "INR"},
+  {"date": "2026-05-18", "spend": 6700.25, "campaign_id": "gads-yb-search", "currency": "INR"}
+]

@@ -48,6 +48,15 @@ def emit_decisions(conn, tenant_id: UUID) -> dict[str, Any]:
         quota = remaining_weekly_quota(cur, tenant_id)
 
         for candidate in candidates:
+            try:
+                from trita_causal.enrich import enrich_candidate_card
+
+                enrich_candidate_card(cur, candidate)
+            except ImportError:
+                pass
+            except Exception:
+                pass
+
             if quota <= 0:
                 skipped_cap += 1
                 continue

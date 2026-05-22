@@ -34,12 +34,12 @@ Track status in the **Status** column: `planned` | `in_progress` | `done` | `def
 | F-CONN-004 | Shiprocket | 1 | **done** | — | API connect/sync; `gold.fact_shipment` |
 | F-CONN-005 | CSV hub | 1 | **done** | F-GRAPH-SHELL | `POST /v1/csv/upload`; templates + quarantine; [P-INGEST-CSV-HUB](../pipelines/P-INGEST-CSV-HUB.md) |
 | F-CONN-006 | Razorpay | 1 | **done** | — | API connect/sync; `gold.fact_payout` |
-| F-CONN-007 | Delhivery | 3 | — | Logistics in matrix |
-| F-CONN-008 | Meta Ads | 3 | — | Ad spend daily |
-| F-CONN-009 | Google Ads | 3 | F-CONN-008 | Same |
+| F-CONN-007 | Delhivery | 3 | **done** | API fixture ingest; `stg_delhivery_shipments`; CSV `tpl_delhivery_shipments` |
+| F-CONN-008 | Meta Ads | 3 | **done** | `stg_meta_ads_daily`; feeds `feat.sku_week_matrix.ad_spend` |
+| F-CONN-009 | Google Ads | 3 | **done** | `stg_google_ads_daily`; beta tier in Sources UI |
 | F-CONN-010 | Amazon | 4 | F-CONN-005 | CSV via hub (min); beta API ok |
 | F-GA4 | GA4 connector | 4 | — | Sessions in matrix |
-| F-UI-SOURCES | Sources page | 1 | **done** | F-CONN-HEALTH | 5 RM-1 rows, legend, sync CTAs |
+| F-UI-SOURCES | Sources page | 1 | **done** | F-CONN-HEALTH | 8 connectors (5 prod + 3 beta), legend, sync CTAs |
 | F-UI-SOURCES-SHELL | Sources shell | 0 | **done** | F-CONN-HEALTH | `/sources` + health table |
 
 Spec: [connect-sources.md](./connect-sources.md)
@@ -100,19 +100,18 @@ Spec: [decision-inbox.md](./decision-inbox.md)
 
 ## Causal, proactive, chat
 
-| ID | Name | Phase | Deps | Acceptance criteria |
-|----|------|-------|------|---------------------|
-| F-CAUSAL-001 | Association L1 | 3 | F-FEAT-MATRIX | FDR; UI label |
-| F-CAUSAL-002 | DoWhy L2/L3 | 3 | F-CAUSAL-001 | Refutation gate |
-| F-CAUSAL-003 | Causal narrative on card | 3 | F-CAUSAL-002, F-DEC-001 | evidence_refs |
-| F-PROACTIVE-001 | Trigger engine | 3 | F-DEC-001 | Feed populate |
-| F-PROACTIVE-002 | Monday digest | 3 | F-PROACTIVE-001 | Top 3 |
-| F-PROACTIVE-003 | Email digest | 3 | F-PROACTIVE-001 | ≤1 urgent/day |
-| F-PROACTIVE-004 | Slack digest | 3 | F-PROACTIVE-003 | Optional |
-| F-CHAT-001 | Inventory chat API | 3 | F-PLAT-003 | Grounded refuse |
-| F-CHAT-002 | Chat UI | 3 | F-CHAT-001 | Evidence chips |
-| F-FEAT-MATRIX | SKU-week matrix | 3 | F-CONN-007,008 | Completeness score |
-
+| ID | Name | Phase | Status | Deps | Acceptance criteria |
+|----|------|-------|--------|------|---------------------|
+| F-FEAT-MATRIX | SKU-week matrix | 3 | **done** | F-METRICS-001 | `feat.sku_week_matrix` dbt |
+| F-CAUSAL-001 | Association L1 | 3 | **done** | F-FEAT-MATRIX | FDR; UI label; `trita_causal/association.py` |
+| F-CAUSAL-002 | DoWhy L2/L3 | 3 | **done** | F-CAUSAL-001 | Refutation gate; `dowhy_runner.py` + DB CHECK |
+| F-CAUSAL-003 | Causal narrative on card | 3 | **done** | F-CAUSAL-002, F-DEC-001 | `enrich.py` + inbox UI; evidence_refs |
+| F-PROACTIVE-001 | Trigger engine | 3 | **done** | F-DEC-001 | TR-COVER/VEL/CAUSAL/SYNC; `trita_proactive` |
+| F-PROACTIVE-002 | Monday digest | 3 | **done** | F-PROACTIVE-001 | `POST /v1/proactive/digest/weekly` |
+| F-PROACTIVE-003 | Email digest | 3 | **done** | F-PROACTIVE-001 | `digest_deliveries`; Resend optional |
+| F-PROACTIVE-004 | Slack digest | 3 | **done** | F-PROACTIVE-003 | Slack mirror row in `digest_deliveries` |
+| F-CHAT-001 | Inventory chat API | 3 | **done** | F-PLAT-003 | `POST /v1/chat/message`; refuse OOS |
+| F-CHAT-002 | Chat UI | 3 | **done** | F-CHAT-001 | `/chat` + evidence chips |
 Spec: [causal-proactive.md](./causal-proactive.md)
 
 ---

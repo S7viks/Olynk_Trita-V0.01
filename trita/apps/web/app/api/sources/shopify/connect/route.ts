@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { TRITA_TOKEN_COOKIE, apiBaseUrl, devShopHandle } from "@/lib/constants";
+import { TRITA_TOKEN_COOKIE, apiBaseUrl } from "@/lib/constants";
 
 /**
  * Start Shopify OAuth from the web app (Bearer from httpOnly cookie).
@@ -14,9 +14,16 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const shop = url.searchParams.get("shop")?.trim() || devShopHandle();
+  const shop = url.searchParams.get("shop")?.trim();
+  const returnTo = url.searchParams.get("return_to")?.trim() || "/onboarding";
 
-  const connectUrl = `${apiBaseUrl()}/v1/sources/shopify/connect?shop=${encodeURIComponent(shop)}`;
+  if (!shop) {
+    redirect(
+      `${returnTo}?shopify=error&message=${encodeURIComponent("Enter your Shopify store domain first.")}`
+    );
+  }
+
+  const connectUrl = `${apiBaseUrl()}/v1/sources/shopify/connect?shop=${encodeURIComponent(shop)}&return_to=${encodeURIComponent(returnTo)}`;
   const res = await fetch(connectUrl, {
     method: "GET",
     redirect: "manual",

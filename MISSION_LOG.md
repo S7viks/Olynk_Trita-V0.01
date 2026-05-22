@@ -24,3 +24,7 @@
 | 2026-05-21 | **RETRO Milestone 1 → RM-0 GO** | Blocking VAs checked (VA-10/04/08 deferred); pytest 44 passed; doc sweep; RM-1 active |
 | 2026-05-22 | **RETRO Milestone 2 → RM-1 GO** | `verify_rm1_gate.py` exit 0; VA-13/14/26; pytest 62 passed; Scrutiny+BEHAVE PASS; RM-2 active |
 | 2026-05-22 | **RETRO Milestone 3 → RM-2 GO** | `verify_rm2_gate.py` exit 0 (audit≥1); pytest 80+18; Scrutiny PASS; VA-15–17 + gate; RM-3 active |
+| 2026-05-22 | SHIP F-CAUSAL-001..003 | `trita_causal` assoc+refutation+enrich; `analytics.causal_edges`; `POST /v1/causal/run`; pytest 15 (causal+decisions); VA-18 unit; VA-19 live gate pending pilot run |
+| 2026-05-22 | SHIP F-PROACTIVE + F-CHAT | `trita_proactive` triggers/digest; feed UI; chat grounded refuse; pytest 16; pilot 1 feed event + weekly digest |
+| 2026-05-22 | SHIP F-CONN-007..009 | Delhivery, Meta Ads, Google Ads beta; raw tables + dbt staging; Sources 8 rows |
+| 2026-05-22 | **RM-3 gate closed** | `verify_rm3_gate.py` exit 0; VA-18/19; MISSION #29; RETRO → RM-4 active |

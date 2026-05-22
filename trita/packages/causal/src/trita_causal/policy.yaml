@@ -1,0 +1,17 @@
+min_weeks: 12
+completeness_threshold: 0.7
+max_lags_days: 14
+fdr_alpha: 0.05
+top_k_per_sku: 3
+max_skus_per_run: 500
+refutation_tests:
+  - placebo
+  - random_common_cause
+  - subset_stability
+blocked_edges:
+  - cause: ad_spend
+    effect: unit_cost
+  - cause: payout_delay_days
+    effect: on_hand
+    unless_path: order_bridge
+max_lag_days_blocked: 21

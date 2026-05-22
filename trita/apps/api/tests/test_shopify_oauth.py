@@ -42,6 +42,8 @@ def test_connect_redirects_to_shopify() -> None:
     location = response.headers["location"]
     assert "yoga-bar.myshopify.com/admin/oauth/authorize" in location
     assert "client_id=test-client-id" in location
+    assert "redirect_uri=" in location
+    assert "localhost%3A3000%2Fapi%2Fsources%2Fshopify%2Fcallback" in location
 
 
 @patch("trita_api.routes.shopify.upsert_integration_health")
@@ -61,6 +63,8 @@ def test_callback_stores_token_and_redirects(
         f"/v1/sources/shopify/callback?code=abc&shop={shop}&state={state}",
     )
     assert response.status_code == 302
+    assert "/onboarding" in response.headers.get("location", "")
+    assert "shopify=connected" in response.headers.get("location", "")
     mock_upsert.assert_called_once()
     args, kwargs = mock_upsert.call_args
     assert kwargs["tenant_id"] == tenant_id

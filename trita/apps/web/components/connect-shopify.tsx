@@ -1,41 +1,80 @@
-import { devShopHandle } from "@/lib/constants";
+"use client";
 
-/** Single dev-store connect — shop from env, not a form (RM-1+: install URL / tenant settings). */
-export function ConnectShopify() {
-  const shop = devShopHandle();
-  const connectHref = `/api/sources/shopify/connect?shop=${encodeURIComponent(shop)}`;
+import { useState } from "react";
+
+import { OrbitButton } from "@/components/orbit/button";
+import { OrbitCard } from "@/components/orbit/card";
+import { devShopHandle } from "@/lib/constants";
+import { normalizeShopInput, shopHandleFromDomain } from "@/lib/shopify-shop";
+
+type Props = {
+  /** Web path after OAuth completes */
+  returnTo?: string;
+};
+
+/**
+ * Merchant enters their Shopify store domain; OAuth starts via web proxy (port 3000).
+ */
+export function ConnectShopify({ returnTo = "/onboarding" }: Props) {
+  const placeholder = `${devShopHandle()}.myshopify.com`;
+  const [shopInput, setShopInput] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  function onConnect() {
+    setError(null);
+    const domain = normalizeShopInput(shopInput);
+    if (!domain) {
+      setError(
+        "Enter your Shopify store domain, e.g. your-brand.myshopify.com (from Shopify Admin → Settings)."
+      );
+      return;
+    }
+    const handle = shopHandleFromDomain(domain);
+    const params = new URLSearchParams({
+      shop: handle,
+      return_to: returnTo,
+    });
+    window.location.assign(`/api/sources/shopify/connect?${params.toString()}`);
+  }
 
   return (
-    <div
-      style={{
-        marginTop: "1.5rem",
-        padding: "1rem",
-        background: "var(--surface)",
-        border: "1px solid var(--border)",
-        borderRadius: 8,
-      }}
-    >
-      <h2 style={{ margin: "0 0 0.5rem", fontSize: "1.1rem" }}>Connect Shopify</h2>
-      <p style={{ margin: "0 0 1rem", color: "var(--muted)", fontSize: "0.9rem" }}>
-        Opens OAuth for your Partner dev store ({shop}.myshopify.com), using this
-        signed-in tenant. Configure the store via{" "}
-        <code>SHOPIFY_DEV_SHOP_DOMAIN</code> or{" "}
-        <code>NEXT_PUBLIC_SHOPIFY_DEV_SHOP</code> in <code>.env</code>.
+    <OrbitCard variant="glass" className="!p-4">
+      <h3 className="text-sm font-black">Connect Shopify</h3>
+      <p className="mt-1 text-caption text-muted-foreground">
+        Enter the <strong>myshopify.com</strong> domain for the store you want Trita to read. You
+        will approve access in Shopify Admin.
       </p>
-      <a
-        href={connectHref}
-        style={{
-          display: "inline-block",
-          padding: "0.6rem 1.1rem",
-          background: "var(--accent)",
-          color: "#fff",
-          borderRadius: 6,
-          fontWeight: 600,
-          textDecoration: "none",
+
+      <label className="mt-4 block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+        Store domain
+      </label>
+      <input
+        type="text"
+        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        placeholder={placeholder}
+        value={shopInput}
+        onChange={(e) => setShopInput(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            onConnect();
+          }
         }}
-      >
+        autoComplete="off"
+        spellCheck={false}
+      />
+      <p className="mt-1 text-tiny text-muted-foreground">
+        Examples: <code className="text-tiny">acme-brand.myshopify.com</code> or{" "}
+        <code className="text-tiny">acme-brand</code>
+      </p>
+
+      {error ? (
+        <p className="mt-2 text-caption text-destructive">{error}</p>
+      ) : null}
+
+      <OrbitButton type="button" className="mt-4" onClick={onConnect}>
         Connect Shopify
-      </a>
-    </div>
+      </OrbitButton>
+    </OrbitCard>
   );
 }

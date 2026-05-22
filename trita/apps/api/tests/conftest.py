@@ -22,6 +22,14 @@ DECISIONS_SRC = Path(__file__).resolve().parents[3] / "packages" / "decisions" /
 if str(DECISIONS_SRC) not in sys.path:
     sys.path.insert(0, str(DECISIONS_SRC))
 
+CAUSAL_SRC = Path(__file__).resolve().parents[3] / "packages" / "causal" / "src"
+if str(CAUSAL_SRC) not in sys.path:
+    sys.path.insert(0, str(CAUSAL_SRC))
+
+PROACTIVE_SRC = Path(__file__).resolve().parents[3] / "packages" / "proactive" / "src"
+if str(PROACTIVE_SRC) not in sys.path:
+    sys.path.insert(0, str(PROACTIVE_SRC))
+
 
 @pytest.fixture(autouse=True)
 def _env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -30,11 +38,12 @@ def _env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("CONNECTOR_TOKEN_KEY", "test-connector-key-32bytes-minimum!!")
     monkeypatch.setenv("SHOPIFY_CLIENT_ID", "test-client-id")
     monkeypatch.setenv("SHOPIFY_CLIENT_SECRET", "test-client-secret")
+    monkeypatch.setenv("NEXT_PUBLIC_WEB_URL", "http://localhost:3000")
     monkeypatch.setenv(
         "SHOPIFY_OAUTH_REDIRECT_URI",
-        "http://localhost:8000/v1/sources/shopify/callback",
+        "http://localhost:3000/api/sources/shopify/callback",
     )
-    monkeypatch.setenv("NEXT_PUBLIC_API_URL", "http://localhost:8000")
+    monkeypatch.setenv("NEXT_PUBLIC_API_URL", "http://127.0.0.1:8000")
 
 
 def mint_test_token(

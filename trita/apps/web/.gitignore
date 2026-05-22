@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+package-lock.json
+
+# next.js
+.next/
+out/
+
+# env (use repo root .env + .env.local synced by start-web.ps1)
+.env
+.env*.local
+!.env.example
+
+# debug
+npm-debug.log*
+.pnpm-debug.log*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

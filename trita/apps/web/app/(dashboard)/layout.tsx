@@ -1,14 +1,9 @@
-import { AppNav } from "@/components/app-nav";
+import { AppShell } from "@/components/app-shell";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <>
-      <AppNav />
-      <main>{children}</main>
-    </>
-  );
+  return <AppShell>{children}</AppShell>;
 }

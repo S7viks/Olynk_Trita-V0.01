@@ -19,13 +19,9 @@ def _dev_only() -> None:
 
 
 def _jwt_secret() -> str:
-    secret = os.environ.get("SUPABASE_JWT_SECRET") or os.environ.get("API_JWT_SECRET")
-    if not secret:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="JWT secret not configured",
-        )
-    return secret
+    from trita_api.auth import _jwt_secret as trita_secret
+
+    return trita_secret()
 
 
 class DevTokenResponse(BaseModel):

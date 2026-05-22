@@ -54,10 +54,10 @@
 
 ### Milestone 4 — RM-3: Causal + proactive (Weeks 9–11)
 
-26. [ ] Causal association + DoWhy + card copy — `F-CAUSAL-001`..`003`
-27. [ ] Proactive triggers, digest, chat — `F-PROACTIVE-001`..`004`, `F-CHAT-001`, `F-CHAT-002`
-28. [ ] Connectors 7–9 — `F-CONN-007`..`009`
-29. [ ] **Gate (RM-3):** Yoga Bar — ≥1 card with L2 or L3 driver + evidence refs
+26. [x] Causal association + DoWhy + card copy — `F-CAUSAL-001`..`003`
+27. [x] Proactive triggers, digest, chat — `F-PROACTIVE-001`..`004`, `F-CHAT-001`, `F-CHAT-002`
+28. [x] Connectors 7–9 — `F-CONN-007`..`009`
+29. [x] **Gate (RM-3):** Yoga Bar — ≥1 card with L2 or L3 driver + evidence refs
 
 ### Milestone 5 — RM-4: Ten apps + hardening (Weeks 12–14)
 
@@ -131,7 +131,7 @@ Granular tasks: [`docs/ROADMAP.md`](docs/ROADMAP.md), [`docs/roadmap/`](docs/roa
 
 ## Status
 
-Current Milestone: **4** (RM-3)
-Active Feature: RM-3 — causal + proactive (`F-CAUSAL-001`..`003`, MISSION #26–29)
+Current Milestone: **5** (RM-4)
+Active Feature: `F-GA4`, `F-CONN-010` (MISSION #30); RM-4 hardening (#31–32)
 Pilot tenant: Yoga Bar
-Last Updated: 2026-05-22 (RETRO Milestone 3 — RM-2 GO; RM-3 active)
+Last Updated: 2026-05-22 (RM-3 gate closed — `verify_rm3_gate.py` VA-18/19)

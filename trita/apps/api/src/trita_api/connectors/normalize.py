@@ -50,6 +50,71 @@ def shiprocket_to_events(
     return events
 
 
+def delhivery_to_events(
+    tenant_id: UUID, records: list[dict[str, Any]], *, fixture: bool
+) -> list[RawEvent]:
+    events: list[RawEvent] = []
+    for row in records:
+        ext = str(row.get("awb") or row.get("waybill") or row.get("id") or "")
+        if not ext:
+            continue
+        events.append(
+            RawEvent(
+                tenant_id=tenant_id,
+                source="delhivery",
+                external_id=ext,
+                entity_type="shipment",
+                payload=row,
+                lineage={"fixture": fixture},
+            )
+        )
+    return events
+
+
+def meta_ads_to_events(
+    tenant_id: UUID, records: list[dict[str, Any]], *, fixture: bool
+) -> list[RawEvent]:
+    events: list[RawEvent] = []
+    for row in records:
+        day = str(row.get("date") or row.get("spend_date") or "")
+        camp = str(row.get("campaign_id") or row.get("campaign") or "default")
+        if not day:
+            continue
+        events.append(
+            RawEvent(
+                tenant_id=tenant_id,
+                source="meta_ads",
+                external_id=f"{day}:{camp}",
+                entity_type="ad_spend_daily",
+                payload=row,
+                lineage={"fixture": fixture},
+            )
+        )
+    return events
+
+
+def google_ads_to_events(
+    tenant_id: UUID, records: list[dict[str, Any]], *, fixture: bool
+) -> list[RawEvent]:
+    events: list[RawEvent] = []
+    for row in records:
+        day = str(row.get("date") or row.get("segments.date") or "")
+        camp = str(row.get("campaign_id") or row.get("campaign") or "default")
+        if not day:
+            continue
+        events.append(
+            RawEvent(
+                tenant_id=tenant_id,
+                source="google_ads",
+                external_id=f"{day}:{camp}",
+                entity_type="ad_spend_daily",
+                payload=row,
+                lineage={"fixture": fixture},
+            )
+        )
+    return events
+
+
 def razorpay_to_events(
     tenant_id: UUID, records: list[dict[str, Any]], *, fixture: bool
 ) -> list[RawEvent]:
@@ -85,4 +150,10 @@ def normalize(
         return shiprocket_to_events(tenant_id, records, fixture=fixture)
     if source == "razorpay":
         return razorpay_to_events(tenant_id, records, fixture=fixture)
+    if source == "delhivery":
+        return delhivery_to_events(tenant_id, records, fixture=fixture)
+    if source == "meta_ads":
+        return meta_ads_to_events(tenant_id, records, fixture=fixture)
+    if source == "google_ads":
+        return google_ads_to_events(tenant_id, records, fixture=fixture)
     raise ValueError(f"Unknown source {source}")

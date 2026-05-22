@@ -192,6 +192,16 @@ def test_csv_idempotent_replay(
     assert mock_write.call_count == 1
 
 
+def test_shipment_row_accepts_awb() -> None:
+    from trita_api.csv_hub.validate import validate_canonical_row
+
+    row = {"awb": "AWB123", "status": "delivered", "occurred_at": "2024-01-15"}
+    canonical, err = validate_canonical_row("shipment", row)
+    assert err is None
+    assert canonical is not None
+    assert canonical["awb"] == "AWB123"
+
+
 @patch("trita_api.routes.csv.get_csv_upload")
 def test_csv_upload_status_tenant_isolation(
     mock_get: MagicMock,

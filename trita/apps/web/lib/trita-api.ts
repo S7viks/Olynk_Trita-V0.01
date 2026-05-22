@@ -6,6 +6,7 @@ export type IntegrationHealth = {
   source: string;
   display_name?: string;
   mode?: string;
+  tier?: string;
   status: string;
   last_sync_at: string | null;
   freshness_sla_hours: number;
@@ -193,4 +194,56 @@ export async function fetchDecisionDetail(id: string) {
 
 export async function fetchRejectReasons() {
   return tritaFetch<{ reasons: string[] }>("/v1/decisions/reject-reasons");
+}
+
+export type ProactiveFeedResponse = {
+  tenant_id: string;
+  count: number;
+  items: Array<{
+    id: string;
+    trigger_id: string;
+    severity: string;
+    title: string;
+    body: string;
+    payload: Record<string, unknown>;
+    created_at: string | null;
+  }>;
+};
+
+export async function fetchProactiveFeed(limit = 30) {
+  return tritaFetch<ProactiveFeedResponse>(`/v1/proactive/feed?limit=${limit}`);
+}
+
+export type TenantContext = {
+  user_id: string;
+  tenant_id: string;
+  role: string;
+};
+
+export async function fetchTenantContext(): Promise<TenantContext> {
+  return tritaFetch<TenantContext>("/v1/tenant/context");
+}
+
+export type NotificationSettings = {
+  tenant_id: string;
+  weekly_digest_enabled: boolean;
+  urgent_enabled: boolean;
+  email_to: string | null;
+  updated_at: string | null;
+};
+
+export async function fetchNotificationSettings(): Promise<NotificationSettings> {
+  return tritaFetch<NotificationSettings>("/v1/settings/notifications");
+}
+
+export type OnboardingStatus = {
+  tenant_id: string;
+  display_name: string;
+  slug: string;
+  onboarding_complete: boolean;
+  shopify_connected: boolean;
+};
+
+export async function fetchOnboardingStatus(): Promise<OnboardingStatus> {
+  return tritaFetch<OnboardingStatus>("/v1/onboarding/status");
 }

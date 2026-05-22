@@ -18,6 +18,9 @@ _FIXTURE_FILES = {
     "unicommerce": "unicommerce_yoga_bar.json",
     "shiprocket": "shiprocket_yoga_bar.json",
     "razorpay": "razorpay_yoga_bar.json",
+    "delhivery": "delhivery_yoga_bar.json",
+    "meta_ads": "meta_ads_yoga_bar.json",
+    "google_ads": "google_ads_yoga_bar.json",
 }
 
 
@@ -114,6 +117,26 @@ def fetch_razorpay_settlements(cred: ConnectorCredential) -> list[dict[str, Any]
     raise RuntimeError("Razorpay credentials or CONNECTOR_DEV_FIXTURES required")
 
 
+def _beta_fixture_fetch(source: str, cred: ConnectorCredential) -> list[dict[str, Any]]:
+    """RM-3 beta connectors: fixture ingest until live API URLs are configured."""
+    secrets = _parse_secret(cred)
+    if _use_dev_fixtures() or secrets.get("mode") == "fixture" or secrets.get("api_key"):
+        return _load_fixture(source)
+    raise RuntimeError(f"{source} credentials or CONNECTOR_DEV_FIXTURES required")
+
+
+def fetch_delhivery_shipments(cred: ConnectorCredential) -> list[dict[str, Any]]:
+    return _beta_fixture_fetch("delhivery", cred)
+
+
+def fetch_meta_ads_daily(cred: ConnectorCredential) -> list[dict[str, Any]]:
+    return _beta_fixture_fetch("meta_ads", cred)
+
+
+def fetch_google_ads_daily(cred: ConnectorCredential) -> list[dict[str, Any]]:
+    return _beta_fixture_fetch("google_ads", cred)
+
+
 def fetch_for_connector(
     spec: ConnectorSpec, cred: ConnectorCredential
 ) -> list[dict[str, Any]]:
@@ -123,4 +146,10 @@ def fetch_for_connector(
         return fetch_shiprocket_shipments(cred)
     if spec.source == "razorpay":
         return fetch_razorpay_settlements(cred)
+    if spec.source == "delhivery":
+        return fetch_delhivery_shipments(cred)
+    if spec.source == "meta_ads":
+        return fetch_meta_ads_daily(cred)
+    if spec.source == "google_ads":
+        return fetch_google_ads_daily(cred)
     raise ValueError(f"Fetch not implemented for {spec.source}")

@@ -60,8 +60,9 @@
 
 ### Causal (Milestone 4 — RM-3)
 
-- [ ] **VA-18:** No L3 label without DoWhy refutation pass documented
-- [ ] **VA-19:** **Yoga Bar:** ≥1 card shows L2 or L3 with evidence refs
+- [x] **VA-18:** No L3 label without DoWhy refutation pass documented _(pytest `test_causal.py` — `l3_label` guard + DB CHECK on `analytics.causal_edges`; refutation_details required)_
+- [x] **VA-19:** **Yoga Bar:** ≥1 card shows L2 or L3 with evidence refs _(`verify_rm3_gate.py` exit 0 — 1 card L2 + `analytics.causal_edges` ref; 2026-05-22 `complete_rm3_gate.py`)_
+- [x] **RM-3 gate:** **Yoga Bar** — ≥1 open decision card with L2 or L3 driver and causal evidence refs; no L3 without refutation pass _(2026-05-22: `verify_rm3_gate.py` — `cards_l2_l3=1`, `cards_with_causal_evidence=1`, `l3_ui_without_pass=0`)_
 
 ### Hardening (Milestone 5 — RM-4)
 

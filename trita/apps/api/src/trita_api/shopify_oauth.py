@@ -37,15 +37,19 @@ def _jwt_secret() -> str:
 
 
 def redirect_uri() -> str:
-    uri = (
+    """OAuth callback — always via web app when NEXT_PUBLIC_WEB_URL is set (Partner Dashboard URL)."""
+    web_base = os.environ.get("NEXT_PUBLIC_WEB_URL", "").strip().rstrip("/")
+    if web_base:
+        return f"{web_base}/api/sources/shopify/callback"
+    explicit = (
         os.environ.get("SHOPIFY_OAUTH_REDIRECT_URI")
         or os.environ.get("SHOPIFY_REDIRECT_URI")
         or ""
     ).strip()
-    if not uri:
-        api_base = os.environ.get("NEXT_PUBLIC_API_URL", "http://localhost:8000").rstrip("/")
-        uri = f"{api_base}/v1/sources/shopify/callback"
-    return uri
+    if explicit:
+        return explicit
+    api_base = os.environ.get("NEXT_PUBLIC_API_URL", "http://127.0.0.1:8000").rstrip("/")
+    return f"{api_base}/v1/sources/shopify/callback"
 
 
 def scopes() -> str:
@@ -61,11 +65,14 @@ def normalize_shop_domain(shop: str) -> str:
     return shop
 
 
-def build_oauth_state(*, tenant_id: str, shop_domain: str) -> str:
+def build_oauth_state(
+    *, tenant_id: str, shop_domain: str, return_to: str = "/onboarding"
+) -> str:
     payload = {
         "tenant_id": tenant_id,
         "shop": shop_domain,
         "purpose": "shopify_oauth",
+        "return_to": return_to if return_to.startswith("/") else "/onboarding",
     }
     return jwt.encode(payload, _jwt_secret(), algorithm="HS256")
 
@@ -76,7 +83,10 @@ def verify_oauth_state(state: str) -> dict[str, str]:
         raise ValueError("invalid oauth state")
     tenant_id = str(payload["tenant_id"])
     shop = str(payload["shop"])
-    return {"tenant_id": tenant_id, "shop": shop}
+    return_to = str(payload.get("return_to") or "/onboarding")
+    if not return_to.startswith("/"):
+        return_to = "/onboarding"
+    return {"tenant_id": tenant_id, "shop": shop, "return_to": return_to}
 
 
 def authorize_url(*, shop_domain: str, state: str) -> str:

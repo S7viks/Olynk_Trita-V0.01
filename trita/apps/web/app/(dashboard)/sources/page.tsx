@@ -1,6 +1,6 @@
 import { ConnectShopify } from "@/components/connect-shopify";
-import { ConnectorRm1Panel } from "@/components/connector-rm1-panel";
-import { CsvUploadPanel } from "@/components/csv-upload-panel";
+import { ConnectorRm1Panel, ConnectorRm3Panel } from "@/components/connector-rm1-panel";
+import { SourcesCsvBlock } from "@/components/sources-csv-block";
 import { SourcesHealthTable } from "@/components/sources-health-table";
 import { SourcesLegend } from "@/components/sources-legend";
 import { SyncShopifyButton } from "@/components/sync-shopify";
@@ -43,15 +43,17 @@ export default async function SourcesPage({
     searchParams.error === "csv_upload_failed" ||
     searchParams.error === "csv_validation_failed";
   const tally = health?.integrations.find((i) => i.source === "tally");
+  const delhivery = health?.integrations.find((i) => i.source === "delhivery");
 
   return (
     <section>
-      <h1 style={{ marginTop: 0 }}>Sources</h1>
-      <p style={{ color: "var(--muted)", maxWidth: "42rem" }}>
-        Five RM-1 connectors with honest status — no fake “connected” rows.
-        Shopify OAuth, API sync for Unicommerce / Shiprocket / Razorpay, Tally via
-        CSV hub.
-      </p>
+      <header className="page-header">
+        <h1>Sources</h1>
+        <p>
+          Ten integrations with honest status badges — six production-grade at launch.
+          Connect, sync, and upload CSV where applicable (F-UI-SOURCES).
+        </p>
+      </header>
       <SourcesLegend />
 
       {connectError ? (
@@ -158,18 +160,51 @@ export default async function SourcesPage({
               </span>
             </p>
           ) : null}
-          <ConnectShopify />
+          {isConnected ? (
+            <form
+              action="/api/sources/shopify/disconnect"
+              method="post"
+              style={{ marginTop: "1rem", display: "inline-block" }}
+            >
+              <input type="hidden" name="return_to" value="/sources" />
+              <button
+                type="submit"
+                style={{
+                  padding: "0.4rem 0.75rem",
+                  fontSize: "0.85rem",
+                  borderRadius: 6,
+                  border: "1px solid var(--border)",
+                  background: "transparent",
+                  cursor: "pointer",
+                  marginRight: "0.75rem",
+                }}
+              >
+                Disconnect Shopify
+              </button>
+            </form>
+          ) : (
+            <ConnectShopify returnTo="/sources" />
+          )}
           <ConnectorRm1Panel integrations={health.integrations} />
-          <div style={{ marginTop: "1.5rem" }}>
-            <h2 style={{ fontSize: "1.1rem" }}>Tally (CSV hub)</h2>
-            <p style={{ color: "var(--muted)", fontSize: "0.9rem" }}>
-              Status: {tally?.status ?? "—"}
-              {tally?.detail?.quarantine_count != null
-                ? ` · ${String(tally.detail.quarantine_count)} quarantined`
-                : ""}
-            </p>
-            <CsvUploadPanel sourceLabel="Tally" />
-          </div>
+          <ConnectorRm3Panel integrations={health.integrations} />
+          <SourcesCsvBlock
+            title="Delhivery (CSV hub)"
+            description="Shipment export via tpl_delhivery_shipments when API beta is not connected."
+            healthKey="delhivery"
+            integration={delhivery}
+            label="Delhivery"
+            logicalSource="delhivery"
+            templateId="tpl_delhivery_shipments"
+          />
+          <SourcesCsvBlock
+            title="Tally (CSV hub)"
+            description="Unit cost and sales history from Tally exports."
+            healthKey="tally"
+            integration={tally}
+            label="Tally"
+            logicalSource="tally"
+            hint="Auto-detects Tally stock or sales templates from headers."
+          />
         </>
       ) : null}
     </section>

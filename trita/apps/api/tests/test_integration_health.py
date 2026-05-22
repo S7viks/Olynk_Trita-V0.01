@@ -33,7 +33,7 @@ def test_integrations_health_shopify_disconnected(tenant_a_id: UUID) -> None:
     body = response.json()
     assert body["tenant_id"] == str(tenant_a_id)
     integrations = body["integrations"]
-    assert len(integrations) == 5
+    assert len(integrations) == 8
     shopify = next(i for i in integrations if i["source"] == "shopify")
     assert shopify["source"] == "shopify"
     assert shopify["status"] == "disconnected"

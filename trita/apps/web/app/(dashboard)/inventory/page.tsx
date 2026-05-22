@@ -1,4 +1,5 @@
 import { InventorySkuTable } from "@/components/inventory-sku-table";
+import { PageHeader } from "@/components/ui/page-header";
 import { fetchSkuMetrics } from "@/lib/trita-api";
 
 const VALID_SORT = new Set([
@@ -38,21 +39,17 @@ export default async function InventoryPage({
     error = e instanceof Error ? e.message : "Failed to load inventory";
   }
 
-  const metricDate = data?.items[0]?.metric_date ?? null;
-
   return (
     <section>
-      <h1 style={{ marginTop: 0 }}>Inventory</h1>
-      <p style={{ color: "var(--muted)", maxWidth: "42rem" }}>
-        Read-only SKU list from <code>feat.sku_metrics_daily</code>. Sort by cover
-        or aging; filter stockout and dead-stock flags (F-UI-INVENTORY-LIST).
-      </p>
-      {error ? (
-        <p style={{ color: "var(--failed)" }}>{error}</p>
-      ) : data ? (
+      <PageHeader
+        title="Inventory"
+        description="Read-only SKU list from feat.sku_metrics_daily — sort, filter stockout and dead-stock flags (F-UI-INVENTORY-LIST)."
+      />
+      {error ? <p className="ui-alert ui-alert-error">{error}</p> : null}
+      {data ? (
         <InventorySkuTable
           items={data.items}
-          metricDate={metricDate}
+          metricDate={data.items[0]?.metric_date ?? null}
           searchParams={searchParams}
         />
       ) : null}

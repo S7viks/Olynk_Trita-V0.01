@@ -3,6 +3,13 @@ name = "trita-causal"
 version = "0.0.1"
 description = "Causal association and DoWhy refutation"
 requires-python = ">=3.11"
+dependencies = [
+    "PyYAML>=6.0.0",
+    "psycopg[binary]>=3.2.0",
+]
+
+[project.optional-dependencies]
+dowhy = ["dowhy>=0.11"]
 
 [build-system]
 requires = ["hatchling"]

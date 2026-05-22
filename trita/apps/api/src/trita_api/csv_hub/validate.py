@@ -11,7 +11,7 @@ REQUIRED_BY_ENTITY: dict[str, tuple[str, ...]] = {
     "order_line": ("sku", "order_id", "qty", "occurred_at"),
     "inventory_snapshot": ("sku", "qty", "as_of"),
     "unit_cost": ("sku", "unit_cost", "as_of"),
-    "shipment": ("sku", "status", "shipped_at"),
+    "shipment": ("status",),
     "payout": ("reference_id", "amount", "settled_at"),
 }
 
@@ -55,6 +55,24 @@ def validate_canonical_row(
                 continue
             return None, f"missing_{field}"
 
+    if entity_type == "shipment":
+        awb = str(row.get("awb") or row.get("sku") or "").strip()
+        if not awb:
+            return None, "missing_awb"
+        canonical["awb"] = awb
+        canonical["status"] = str(row["status"]).strip()
+        shipped = _parse_date(row.get("shipped_at")) or _parse_date(row.get("occurred_at"))
+        if not shipped:
+            return None, "invalid_shipped_at"
+        canonical["shipped_at"] = shipped
+        return canonical, None
+
+    if entity_type == "payout":
+        for k, v in row.items():
+            if v is not None and str(v).strip():
+                canonical[k] = v
+        return canonical, None
+
     canonical["sku"] = str(row["sku"]).strip()
     if entity_type == "order_line":
         canonical["order_id"] = str(row["order_id"]).strip()
@@ -84,9 +102,4 @@ def validate_canonical_row(
         canonical["qty"] = float(qty)
         as_of = _parse_date(row.get("as_of")) or date.today().isoformat()
         canonical["as_of"] = as_of
-    else:
-        for k, v in row.items():
-            if v is not None and str(v).strip():
-                canonical[k] = v
-
     return canonical, None

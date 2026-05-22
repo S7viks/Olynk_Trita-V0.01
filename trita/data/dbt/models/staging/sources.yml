@@ -15,3 +15,9 @@ sources:
         description: Razorpay settlements
       - name: csv_hub_events
         description: CSV hub canonical rows (tally, generic, …)
+      - name: delhivery_events
+        description: Delhivery shipments (beta)
+      - name: meta_ads_events
+        description: Meta Ads daily spend (beta)
+      - name: google_ads_events
+        description: Google Ads daily spend (beta)

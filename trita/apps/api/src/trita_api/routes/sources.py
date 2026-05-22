@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from trita_api.auth import TenantDep, reject_tenant_override
 from trita_api.connectors.ingest import sync_source
-from trita_api.connectors.registry import RM1_API_SOURCES, get_spec
+from trita_api.connectors.registry import API_SYNC_SOURCES, get_spec
 from trita_api.crypto import encrypt_token
 from trita_api.db import get_connector_credential, upsert_connector_credential
 from trita_api.integration_health import upsert_integration_health
@@ -37,7 +37,7 @@ class ConnectBody(BaseModel):
 
 def _validate_source(source: str) -> str:
     key = source.strip().lower()
-    if key not in RM1_API_SOURCES:
+    if key not in API_SYNC_SOURCES:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unknown connector")
     return key
 

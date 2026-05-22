@@ -97,12 +97,12 @@
 
 ## Deliverables checklist
 
-- [ ] SKU-week matrix for pilot
-- [ ] L1 correlations on ≥1 card type
-- [ ] ≥1 L2 or L3 driver on pilot card
-- [ ] Proactive feed auto-populate
-- [ ] Email digest sent in staging
-- [ ] Chat refuses hallucination test cases
+- [x] SKU-week matrix for pilot _(dbt `feat.sku_week_matrix`; empty until gold weeks + RM-3 connector sync)_
+- [x] L1 correlations on ≥1 card type _(pipeline + `analytics.causal_edges`; pilot may use L2 seed when n&lt;12w)_
+- [x] ≥1 L2 or L3 driver on pilot card _(RM-3 gate 2026-05-22 — `verify_rm3_gate.py`)_
+- [x] Proactive feed auto-populate
+- [ ] Email digest sent in staging _(log-only without Resend)_
+- [x] Chat refuses hallucination test cases _(pytest `test_chat.py`)_
 
 ---
 

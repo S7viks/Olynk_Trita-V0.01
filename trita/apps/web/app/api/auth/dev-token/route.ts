@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { TRITA_TOKEN_COOKIE, apiBaseUrl } from "@/lib/constants";
+import { TRITA_ONBOARDING_COOKIE, TRITA_TOKEN_COOKIE, apiBaseUrl } from "@/lib/constants";
 
 export async function POST() {
   if (process.env.NODE_ENV === "production") {
@@ -19,6 +19,12 @@ export async function POST() {
   const data = (await res.json()) as { access_token: string; tenant_id: string };
   const response = NextResponse.json({ ok: true, tenant_id: data.tenant_id });
   response.cookies.set(TRITA_TOKEN_COOKIE, data.access_token, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 8 * 3600,
+  });
+  response.cookies.set(TRITA_ONBOARDING_COOKIE, "1", {
     httpOnly: true,
     sameSite: "lax",
     path: "/",

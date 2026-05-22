@@ -23,13 +23,15 @@ class TenantContext:
 
 
 def _jwt_secret() -> str:
-    secret = os.environ.get("SUPABASE_JWT_SECRET") or os.environ.get("API_JWT_SECRET")
-    if not secret:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="JWT verification not configured",
-        )
-    return secret
+    """Secret for Trita-issued tenant JWTs (HS256). Prefer dedicated signing secret."""
+    for name in ("TRITA_JWT_SECRET", "API_JWT_SECRET", "SUPABASE_JWT_SECRET"):
+        secret = os.environ.get(name, "").strip()
+        if secret and not secret.startswith("sb_"):
+            return secret
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="TRITA_JWT_SECRET or legacy JWT secret required for API tokens",
+    )
 
 
 def decode_access_token(token: str) -> TenantContext:

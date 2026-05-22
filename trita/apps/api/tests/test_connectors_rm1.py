@@ -65,7 +65,7 @@ def test_sync_unicommerce_writes_events(
     assert response.json()["events"] >= 1
 
 
-def test_integrations_health_lists_rm1_sources(tenant_a_id: UUID) -> None:
+def test_integrations_health_lists_rm1_production_sources(tenant_a_id: UUID) -> None:
     token = mint_test_token(tenant_id=tenant_a_id)
     with patch("trita_api.routes.integrations.list_integration_health", return_value=[]):
         with patch("trita_api.routes.integrations.get_shopify_credential", return_value=None):
@@ -76,7 +76,8 @@ def test_integrations_health_lists_rm1_sources(tenant_a_id: UUID) -> None:
                 )
     assert response.status_code == 200
     sources = {i["source"] for i in response.json()["integrations"]}
-    assert sources == {"shopify", "unicommerce", "tally", "shiprocket", "razorpay"}
+    assert {"shopify", "unicommerce", "tally", "shiprocket", "razorpay"}.issubset(sources)
+    assert len(sources) == 8
 
 
 def test_connect_rejects_unknown_source() -> None:

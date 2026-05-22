@@ -3,7 +3,14 @@ import { redirect } from "next/navigation";
 
 import { TRITA_TOKEN_COOKIE, apiBaseUrl } from "@/lib/constants";
 
-const ALLOWED = new Set(["unicommerce", "shiprocket", "razorpay"]);
+const ALLOWED = new Set([
+  "unicommerce",
+  "shiprocket",
+  "razorpay",
+  "delhivery",
+  "meta_ads",
+  "google_ads",
+]);
 
 export async function POST(
   _request: Request,
