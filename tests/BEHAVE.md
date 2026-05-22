@@ -181,10 +181,23 @@ git grep -l "SUPABASE_SERVICE_ROLE_KEY=" -- ':!*.example' ':!.env.example' ':!HA
 ## Suite: csv_hub (VA-26) — RM-1
 
 ```bash
-# TBD — template upload + column-map upload for Yoga Bar tenant
-pytest trita/data/dlt/tests/test_csv_hub_lifecycle.py -q
-# Expected: valid rows in raw; invalid in quarantine; file_hash idempotent replay
+pytest trita/apps/api/tests/test_csv_hub.py -q
+# Includes: idempotent replay, upload status tenant isolation
+
+python scripts/verify_rm1_gate.py
+# Expected: VA-13/14/26 PASS for YOGA_BAR_TENANT_ID
 ```
+
+If VA-13 fails with zero order lines:
+
+```bash
+python scripts/seed_yoga_bar_shopify_orders.py
+python scripts/run_dbt.py run
+python scripts/refresh_identity.py
+python scripts/verify_rm1_gate.py
+```
+
+**Supabase pooler:** CLI scripts use `scripts/_pg_connect.py` (`prepare_threshold=None` on `pooler.supabase.com`). If `refresh_identity.py` fails with `DuplicatePreparedStatement`, confirm `.env` `DATABASE_URL` uses `postgres.<project_ref>` username (see `infra/supabase/PROJECT.md`).
 
 ---
 
